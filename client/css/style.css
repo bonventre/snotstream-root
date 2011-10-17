@@ -1,0 +1,30 @@
+body { font-family: 'Droid Sans', sans-serif; margin: 0; padding: 0; background: #CCCCCC; }
+
+#header {
+  background: #999999;
+  color: white;
+  overflow: hidden;
+}
+
+#branding h1 {
+  padding: 0 10px;
+  font-size: 30px;
+  margin: 8px 0;
+  font-weight: normal;
+}
+
+#branding a {
+  color: white;
+  text-decoration: none;
+}
+
+#footer {
+  font-size: xx-small;
+  padding-right: 3em;
+  float: right;
+  color: #333333; 
+}
+
+#footer a {
+  color: white;
+}

@@ -1,0 +1,29 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"> 
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en"> 
+<head> 
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /> 
+  <title>Ostrich</title>
+  <script src="js/json2.js"></script>
+  <script src="js/jquery-1.6.4.min.js"></script> 
+  <link type="text/css" rel="stylesheet" href="css/style.css">
+  <link type="text/css" rel="stylesheet" href="http://fonts.googleapis.com/css?family=Droid+Sans"/> 
+  <link rel="shortcut icon" href="images/favicon.ico"/>
+</head>
+
+<body>
+  <div id="header"></div>
+  <br/>
+
+  <div id="content"></div>
+
+  <div id="footer"></div>
+</body>
+
+<script>
+  $(document).ready(function() {
+    $("#header").load("header.html");
+    $("#footer").load("footer.html");
+  });
+</script>
+</html>
+
