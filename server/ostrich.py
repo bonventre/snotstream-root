@@ -23,13 +23,18 @@ def main(env, start_response):
     prev = escape(prev)
 
 
-
     status = '200 OK'
     headers = [('content-type','application/json')]
     start_response(status, headers)
     numberarray = []
     for i in range(1,6):
-        numberarray.append([i,random.randint(0,10)])
+        numberarray.append([i,random.randint(0,10-(2-i)*(2-i))])
+    if (prev):
+      for j in range(1,int(prev)):
+          for i in range(0,5):
+              numberarray[i][1] += random.randint(0,10-(2-i)*(2-i))
+
+
     return [str(numberarray)]
 #return ['{"foo":"' + prev + '"}'] 
 
