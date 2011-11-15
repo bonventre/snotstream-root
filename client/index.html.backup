@@ -69,17 +69,15 @@
           plot2.series[1].data[i][1] = 0;
         }
         plot2.replot({resetAxes:true});
-        currentkey = 0;
-        startkey = 0;
       }
       else if ($(this).text() == "Load 5"){
         clearTimeout(t);
-        history(5);
+        update(5);
         t = setTimeout(timer,500);
       }
       else if ($(this).text() == "Load 10"){
         clearTimeout(t);
-        history(10);
+        update(10);
         t = setTimeout(timer,500);
       }
       else{
@@ -113,42 +111,43 @@
         dataType:"json",
         success: function(data){
           ret = data;
-        },
-        complete: function(jqXHR,textStatus){
-          console.log(jqXHR);
-          console.log(textStatus);
         }
       });
       return ret;
     }
 
     var jsonurl = "./data"
+    /*
 
-    var summed = [];
-    var adding = [];
-    for (var i=0;i<100;i++){
-      summed[i] = 0;
-      adding[i] = 0;
-    }
+    var plot2 = $.jqplot('chartdiv',jsonurl,{
+      title: "AJAX JSON Data Renderer",
+      dataRenderer: ajaxDataRenderer,
+      dataRendererOptions: {
+        unusedOptionalUrl: jsonurl
+      }
+    });
+    */
+    var summed = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0];
+    var adding = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0];
     var stop = 0;
     var plot2 = $.jqplot('chartdiv',[summed,adding],{
       stackSeries: true,
       seriesDefaults:{
         renderer:$.jqplot.BarRenderer,
         rendererOptions: {
-          barWidth: 4,
+          barWidth: 2,
         },
         pointLabels: {show: true}
       },
       axes: {
         xaxis: {
           renderer: $.jqplot.CategoryAxisRenderer,
-          label:'Nhit',
+          label:'Slot*32+Channel',
           labelRenderer: $.jqplot.CanvasAxisLabelRenderer,
           pad: 1
         },
         yaxis: {
-          label:'Count',
+          label:'Events',
           labelRenderer: $.jqplot.CanvasAxisLabelRenderer
         }
       }
@@ -156,8 +155,10 @@
 
     function update(howmany) {
       var tempurl = jsonurl;
-      tempurl += "?key=" + currentkey;
-      for (var i=0;i<100;i++){
+      if (howmany > 1){
+        tempurl += "?prev=" + howmany;
+      }
+      for (var i=0;i<512;i++){
         plot2.series[0].data[i][1] += plot2.series[1].data[i][1];
       }
       $.ajax({
@@ -165,57 +166,10 @@
         url: tempurl,
         dataType:"json",
         success: function(data){
-          parsedata(data);
-        },
-        error: function(jqXHR, textStatus, errorThrown){
-          console.log(errorThrown);
+          plot2.series[1].data = data;
         }
-
       });
       plot2.replot({resetAxes:true});
-    }
-
-    function history(howmnay){
-      var tempurl = jsonurl + "?startkey=" + (startkey-homany) + "&endkey=" + startkey;
-      for (var i=0;i<100;i++){
-        plot2.series[0].data[i][1] += plot2.series[1].data[i][1];
-      }
-      $.ajax({
-        async: false,
-        url: tempurl,
-        dataType:"json",
-        success: function(data){
-          parsedata(data);
-        },
-        error: function(jqXHR, textStatus, errorThrown){
-          console.log(errorThrown);
-        }
-
-      });
-      plot2.replot({resetAxes:true});
- 
-    }
-
-    function parsedata(fulldata){
-      console.log(currentkey);
-      console.log(fulldata);
-      if (currentkey == 0){
-        startkey = fulldata[0] - fulldata[1].length;
-      }
-      currentkey = fulldata[0];
-      data = fulldata[1];
-      var temp = [];
-      for (var i=0;i<100;i++){
-        temp[i] = [i+1,0];
-      }
-      for (var i=0;i<data.length;i++){1
-        var x=0;
-        while (((x+1)*5)<data[i] && x<99){
-          x++;
-        }
-        temp[x][1]++; 
-      }
-      plot2.series[1].data = temp;
     }
 
     function timer(howmany){
@@ -226,8 +180,6 @@
       t = setTimeout(timer,500);
     }
 
-    currentkey = 0;
-    startkey = 0;
     timer(1);
 
     /*

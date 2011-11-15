@@ -1,0 +1,46 @@
+per crate - events per channel
+per crate - event rate per channel (events per second)
+per crate - counts versus time (x axis - minutes, y axis - total count)
+global rate (x axis time, y axis - rate)
+per trigger type - trigger rate
+trigger counts - (x axis trigger type, y axis counts)
+reconstructed mtc triggers - time versus counts
+nhit distribution - nhit versus counts
+avg nhit - avg nhit versus time
+per crate - 2d - board versus channel versus events
+per crate - 2d - board versus channel versus event rate
+per crate - 2d - board versus channel versus cmos rate
+per crate - 2d - board versus channel versus cgt 24-bit error
+per crate - 2d - board versus channel versus hardware error
+per crate - 2d - board versus channel versus cgt 16-bit error
+per crate - 2d - board versus channel versus cmos es 16-bit error
+per crate - 2d - board versus channel versus lgiselect error
+per crate - 2d - board versus channel versus missed count
+per crate - 2d - board versus channel versus anomalous qhl value count
+per crate - 2d - board versus channel versus anomalous qhs value count
+per crate - 2d - board versus channel versus anomalous qlx value count
+per crate - 2d - board versus channel versus anomalous tac value count
+2d - crate versus board versus event count
+2d - crate versus board versus event rate
+2d - crate versus board versus cmos rate
+2d - crate versus board versus cgt 24-bit error
+2d - crate versus board versus hardware error
+2d - crate versus board versus cgt 16-bit error
+2d - crate versus board versus cmos es 16-bit error
+2d - crate versus board versus lgiselect error
+2d - crate versus board versus missed count
+2d - crate versus board versus anomalous qhl value count
+2d - crate versus board versus anomalous qhs value count
+2d - crate versus board versus anomalous qlx value count
+2d - crate versus board versus anomalous tac value count
+
+t-win?
+nhit min?
+duration?
+burst size?
+breakdown_trigger?
+development_trigger?
+supernova_trigger
+per crate - 2d - board versus channel versus cmos thresholds?
+per crate - 2d - board versus channel versus cmos threshold zeroes?
+per crate - 2d - board versus channel versus cmos voltage balances?

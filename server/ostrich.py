@@ -27,12 +27,19 @@ def main(env, start_response):
     headers = [('content-type','application/json')]
     start_response(status, headers)
     numberarray = []
-    for i in range(1,6):
-        numberarray.append([i,random.randint(0,10-(2-i)*(2-i))])
+    for i in range(1,513):
+        if (i<200):
+            numberarray.append([i,random.randint(0,int(i/10))])
+        else:
+            numberarray.append([i,random.randint(0,int((513-i)/10))])
     if (prev):
       for j in range(1,int(prev)):
-          for i in range(0,5):
-              numberarray[i][1] += random.randint(0,10-(2-i)*(2-i))
+          for i in range(0,512):
+              if (i<200):
+                  numberarray[i][1] += random.randint(0,int(i/10))
+              else:
+                  numberarray[i][1] += random.randint(0,int((513-i)/10))
+
 
 
     return [str(numberarray)]
