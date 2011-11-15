@@ -64,7 +64,7 @@
         $(this).html("<span>Start</span>");
       }
       else if ($(this).text() == "Clear"){
-        for (var i=0;i<512;i++){
+        for (var i=0;i<100;i++){
           plot2.series[0].data[i][1] = 0;
           plot2.series[1].data[i][1] = 0;
         }
@@ -175,8 +175,8 @@
       plot2.replot({resetAxes:true});
     }
 
-    function history(howmnay){
-      var tempurl = jsonurl + "?startkey=" + (startkey-homany) + "&endkey=" + startkey;
+    function history(howmany){
+      var tempurl = jsonurl + "?startkey=" + (startkey-howmany) + "&endkey=" + startkey;
       for (var i=0;i<100;i++){
         plot2.series[0].data[i][1] += plot2.series[1].data[i][1];
       }
@@ -185,7 +185,7 @@
         url: tempurl,
         dataType:"json",
         success: function(data){
-          parsedata(data);
+          parsehistory(data);
         },
         error: function(jqXHR, textStatus, errorThrown){
           console.log(errorThrown);
@@ -194,6 +194,28 @@
       });
       plot2.replot({resetAxes:true});
  
+    }
+
+    function parsehistory(fulldata){
+      console.log(fulldata);
+      data = fulldata[1];
+      if (startkey == 0){
+        currentkey = fulldata[0][1];
+      }
+      startkey = fulldata[0][0];
+      var temp = [];
+      for (var i=0;i<100;i++){
+        temp[i] = [i+1,0];
+      }
+      for (var i=0;i<data.length;i++){1
+        var x=0;
+        while (((x+1)*5)<data[i] && x<99){
+          x++;
+        }
+        temp[x][1]++; 
+      }
+      plot2.series[1].data = temp;
+
     }
 
     function parsedata(fulldata){

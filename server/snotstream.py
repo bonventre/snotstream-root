@@ -12,9 +12,9 @@ from wsgiref.simple_server import make_server, demo_app
 
 
 class fifo():
-    def __init__(self,size):
+    def __init__(self,size,zero):
         self.size = size
-        self.data = [None for i in xrange(self.size)]
+        self.data = [zero for i in xrange(self.size)]
         self.offset = -1*self.size
 
     def push(self,item):
@@ -35,6 +35,27 @@ class fifo():
             print "good sublist ",lastkey,self.offset,self.offset+self.size,(lastkey-self.offset)+1
 #            print self.data[(lastkey-self.offset)+1:self.size+1]
             return [self.offset+self.size,self.data[(lastkey-self.offset):self.size+1]]
+
+    def grab(self,startkey,endkey):
+        if (endkey == 0):
+            length = endkey-startkey
+            if (length < 0 or length > self.size):
+                length = self.size
+            return [[self.offset+self.size-length,self.offset+self.size],self.data[self.size-length:self.size+1]]
+        if ((startkey < endkey) and (startkey < (self.offset + self.size)) and
+            (endkey > self.offset)):
+            if (startkey < self.offset):
+                startkey = 0
+            else:
+                startkey = startkey - self.offset
+            if (endkey > self.offset + self.size):
+                endkey = self.size
+            else:
+                endkey = endkey - self.offset
+            print startkey,endkey
+            return [[startkey+self.offset,endkey+self.offset],self.data[startkey:endkey+1]]
+        else:
+            return [[-1,-1],[]]
 
 class stream_in(threading.Thread):
     def __init__ (self):
@@ -78,6 +99,13 @@ def main(env, start_response):
 
     key = query.get('key',[''])[0]
     key = escape(key)
+    startkey = query.get('startkey',[''])[0]
+    startkey = escape(startkey)
+    endkey = query.get('endkey',[''])[0]
+    endkey = escape(endkey)
+    if (startkey and endkey):
+        return [str(nhit.grab(int(startkey),int(endkey)))]
+
     if (key):
         if (int(key) or (int(key) == 0)):
             print "key is ",int(key)
@@ -96,7 +124,7 @@ if __name__ == '__main__':
     else:
         address = 'tcp://*:5024'
 
-    nhit = fifo(100)
+    nhit = fifo(100,-1)
 
     # set up zeromq socket
     context = zmq.Context()
