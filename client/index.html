@@ -7,8 +7,10 @@
     <script src="js/jquery-1.7.js"></script> 
     <script src="js/jquery.jqplot.js"></script>
     <script src="js/plugins/jqplot.canvasTextRenderer.min.js"></script>
+    <script src="js/plugins/jqplot.canvasAxisTickRenderer.min.js"></script>
     <script src="js/plugins/jqplot.canvasAxisLabelRenderer.min.js"></script>
-    <script type="text/javascript" src="js/plugins/jqplot.barRenderer.min.js"></script>
+    <script src="js/plugins/jqplot.barRenderer.min.js"></script>
+    <script src="js/histogram.js"></script>
     <link type="text/css" rel="stylesheet" href="css/style.css">
     <link type="text/css" rel="stylesheet" href="http://fonts.googleapis.com/css?family=Droid+Sans"/> 
     <link rel="shortcut icon" href="images/favicon.ico"/>
@@ -104,13 +106,30 @@
 
       var jsonurl = "./data"
 
-      var summed = [];
-      var adding = [];
-      for (var i=0;i<100;i++){
-        summed[i] = 0;
-        adding[i] = 0;
-      }
-      var stop = 0;
+      var nhitplot = new histogram('nhitchart',2,50,0,500,{
+        title: 'Histogram',
+        stackSeries:true,
+        linesPerBin: false,
+        sumhist: true,
+        seriesDefaults:{renderer:$.jqplot.BarRenderer,
+          rendererOptions:{
+            barMargin: 1
+        }},
+        axes:{
+          xaxis: {
+            tickRenderer: $.jqplot.CanvasAxisTickRenderer,
+            tickOptions: {formatString: "%d"}
+          },
+          yaxis:{
+            min: 0,
+            tickRenderer: $.jqplot.CanvasAxisTickRenderer,
+            tickOptions: {formatString: "%3.1f "}
+          }
+        }
+      });
+      
+
+      /*
       var nhitplot = $.jqplot('nhitchart',[summed,adding],{
         stackSeries: true,
         seriesDefaults:{
@@ -133,6 +152,7 @@
           }
         }
       });
+      */
 
       function update(howmany) {
         var tempurl = jsonurl;
@@ -142,16 +162,13 @@
           url: tempurl,
           dataType:"json",
           success: function(data){
-            for (var i=0;i<100;i++){
-              nhitplot.series[0].data[i][1] += nhitplot.series[1].data[i][1];
-            }
             parsedata(data);
           },
           error: function(jqXHR, textStatus, errorThrown){
             console.log(errorThrown);
           }
         });
-        nhitplot.replot({resetAxes:true});
+        nhitplot.replot();
       }
 
       function history(howmany){
@@ -162,17 +179,13 @@
             url: tempurl,
             dataType:"json",
             success: function(data){
-              for (var i=0;i<100;i++){
-                nhitplot.series[0].data[i][1] += nhitplot.series[1].data[i][1];
-              }
               parsehistory(data);
             },
             error: function(jqXHR, textStatus, errorThrown){
               console.log(errorThrown);
             }
-
           });
-          nhitplot.replot({resetAxes:true});
+          nhitplot.replot();
         }
       }
 
@@ -180,11 +193,6 @@
         var data = fulldata[1];
         var maxkey = fulldata[0][1];
         var minkey = fulldata[0][0];
-        var temp = [];
-        for (var i=0;i<100;i++){
-          temp[i] = [i+1,0];
-        }
-
 
         if (maxkey >= 0){
           if (firstkey < 0 || minkey < firstkey){
@@ -193,15 +201,8 @@
           if (lastkey < 0){
             lastkey = maxkey;
           }
-          for (var i=0;i<data.length;i++){1
-            var x=0;
-            while (((x+1)*5)<data[i] && x<99){
-              x++;
-            }
-            temp[x][1]++; 
-          }
         }
-        nhitplot.series[1].data = temp;
+        nhitplot.sum_items(data);
       }
 
       function parsedata(fulldata){
@@ -210,26 +211,13 @@
         var maxkey = fulldata[0];
         var minkey = maxkey - data.length + 1;
 
-        var temp = [];
-        for (var i=0;i<100;i++){
-          temp[i] = [i+1,0];
-        }
-
         if (maxkey >= 0){
           if (firstkey < 0){
             firstkey = minkey;
           }
           lastkey = maxkey;
-
-          for (var i=0;i<data.length;i++){1
-            var x=0;
-            while (((x+1)*5)<data[i] && x<99){
-              x++;
-            }
-            temp[x][1]++; 
-          }
         }
-        nhitplot.series[1].data = temp;
+        nhitplot.sum_items(data);
       }
 
       function timer(howmany){
