@@ -37,6 +37,8 @@
         <div class="sep_li"></div>
         <div class="first_li"><span>Load 5</span></div>
         <div class="first_li"><span>Load 10</span></div>
+        <div class="sep_li"></div>
+        <div class="first_li"><span>Rebin</span></div>
       </div>
       <div id="crateeventchart" style="margin:50px;height:400px;width:500px;" class="plot"></div>
       <div class="vmenu">
@@ -46,6 +48,8 @@
         <div class="sep_li"></div>
         <div class="first_li"><span>Load 5</span></div>
         <div class="first_li"><span>Load 10</span></div>
+        <div class="sep_li"></div>
+        <div class="first_li"><span>Rebin</span></div>
       </div>
 
     </div>
@@ -92,11 +96,15 @@
           history(10);
           t = setTimeout(timer,500);
         }
-        else{
+        else if ($(this).text() == "Stop"){
           $(this).html("<span>Stop</span>");
           stop = 0;
           clearTimeout(t);
           timer(1);
+        }
+        else if ($(this).text() == "Rebin"){
+          var numbins = prompt("How many bins??","5");
+          nhitplot.rebin(parseInt(numbins));
         }
 
         $('.vmenu').hide();
@@ -128,32 +136,6 @@
         }
       });
       
-
-      /*
-      var nhitplot = $.jqplot('nhitchart',[summed,adding],{
-        stackSeries: true,
-        seriesDefaults:{
-          renderer:$.jqplot.BarRenderer,
-          rendererOptions: {
-            barWidth: 4,
-          },
-          pointLabels: {show: true}
-        },
-        axes: {
-          xaxis: {
-            renderer: $.jqplot.CategoryAxisRenderer,
-            label:'Nhit',
-            labelRenderer: $.jqplot.CanvasAxisLabelRenderer,
-            pad: 1
-          },
-          yaxis: {
-            label:'Count',
-            labelRenderer: $.jqplot.CanvasAxisLabelRenderer
-          }
-        }
-      });
-      */
-
       function update(howmany) {
         var tempurl = jsonurl;
         tempurl += "?nhit=" + lastkey;
@@ -235,40 +217,6 @@
       // firstkey gets cleared when you clear the data, otherwise stays.
       firstkey = -1;
       timer(1);
-
-      /*
-      var plot0 = $.jqplot('nhitchart',  [[[1, 2],[3,5.12],[5,13.1],[7,33.6],[9,85.9],[11,219.9]]],{
-        axes:{
-          xaxis:{
-            label:'Angle (radians)',
-            labelRenderer: $.jqplot.CanvasAxisLabelRenderer
-          },
-          yaxis:{
-            label:'Cosine',
-            labelRenderer: $.jqplot.CanvasAxisLabelRenderer
-          }
-        }
-
-      });
-      var i = 0;
-
-      function update() {
-        if (i%2 == 0){
-          plot0.series[0].data = [[0,0],[1,1],[2,-1],[3,3]];
-          plot0.replot({resetAxes:true});
-          i++;
-          }else{
-          plot0.series[0].data = [[0,0],[1,-1],[2,2],[3,0]];
-          plot0.replot({resetAxes:true});
-          i=0;
-        }
-        setTimeout(update, 500);
-      }
-
-      update();
-      */
-
-
     });
   </script>
 </html>
