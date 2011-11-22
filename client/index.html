@@ -6,12 +6,14 @@
     <script src="js/json2.js"></script>
     <script src="js/jquery-1.7.js"></script> 
     <script src="js/jquery.jqplot.js"></script>
-    <script src="js/plugins/jqplot.canvasTextRenderer.min.js"></script>
-    <script src="js/plugins/jqplot.canvasAxisTickRenderer.min.js"></script>
-    <script src="js/plugins/jqplot.canvasAxisLabelRenderer.min.js"></script>
-    <script src="js/plugins/jqplot.barRenderer.min.js"></script>
+    <script src="js/plugins/jqplot.canvasTextRenderer.js"></script>
+    <script src="js/plugins/jqplot.canvasAxisTickRenderer.js"></script>
+    <script src="js/plugins/jqplot.canvasAxisLabelRenderer.js"></script>
+    <script src="js/plugins/jqplot.barRenderer.js"></script>
+    <script src="js/jquery.boxy.js"></script>
     <script src="js/histogram.js"></script>
     <link type="text/css" rel="stylesheet" href="css/style.css">
+    <link type="text/css" rel="stylesheet" href="css/boxy.css">
     <link type="text/css" rel="stylesheet" href="http://fonts.googleapis.com/css?family=Droid+Sans"/> 
     <link rel="shortcut icon" href="images/favicon.ico"/>
     <style>
@@ -29,7 +31,7 @@
     <br/>
 
     <div id="content">
-      <div id="nhitchart" style="margin:50px;height:400px;width:500px;" class="plot"></div>
+      <div id="nhitchart" style="margin:50px;height:400px;width:200px;float:left;" class="plot"></div>
       <div class="vmenu">
         <div class="first_li"><span>Clear</span></div>
         <div class="sep_li"></div>
@@ -40,7 +42,7 @@
         <div class="sep_li"></div>
         <div class="first_li"><span>Rebin</span></div>
       </div>
-      <div id="crateeventchart" style="margin:50px;height:400px;width:500px;" class="plot"></div>
+      <div id="crateeventchart" style="margin:50px;height:400px;width:200px;float:left;" class="plot"></div>
       <div class="vmenu">
         <div class="first_li"><span>Clear</span></div>
         <div class="sep_li"></div>
@@ -48,9 +50,17 @@
         <div class="sep_li"></div>
         <div class="first_li"><span>Load 5</span></div>
         <div class="first_li"><span>Load 10</span></div>
-        <div class="sep_li"></div>
-        <div class="first_li"><span>Rebin</span></div>
       </div>
+      <div id="cardeventchart" style="margin:50px;height:400px;width:1000px;float:left;" class="plot"></div>
+      <div class="vmenu">
+        <div class="first_li"><span>Clear</span></div>
+        <div class="sep_li"></div>
+        <div class="first_li"><span>Stop</span></div>
+        <div class="sep_li"></div>
+        <div class="first_li"><span>Load 5</span></div>
+        <div class="first_li"><span>Load 10</span></div>
+      </div>
+
 
     </div>
     <div id="footer"></div>
@@ -61,163 +71,186 @@
       $("#header").load("header.html");
       $("#footer").load("footer.html");
 
-      $('.plot').bind('contextmenu',function(e){
-        var $cmenu = $(this).next();
-        $('<div class="overlay"></div>').css({left:'0px',top:'0px',position:'absolute',width:'100%',height:'100%',zIndex:'100'}).click(function(){
-          $(this).remove();
-          $cmenu.hide();
-        }).bind('contextmenu',function(){return false;}).appendTo(document.body);
-        $(this).next().css({left: e.pageX, top: e.pageY, zIndex: '101'}).show();
-        return false;
+      var nhitplot = new histogram('nhitchart','nhit',2,50,0,500,{
+        title: 'Nhit',
+        stackSeries:true,
+        linesPerBin: false,
+        sumHist: true,
+        contextMenu: true, 
+        grid: {shadow: false},
+        seriesDefaults:{renderer:$.jqplot.BarRenderer,
+          rendererOptions:{
+            barMargin: 1
+        },
+        shadow: false},
+        axes:{
+          xaxis: {
+            tickRenderer: $.jqplot.CanvasAxisTickRenderer,
+            tickOptions: {formatString: "%d"},
+            labelRenderer: $.jqplot.CanvasAxisLabelRenderer,
+            label: 'Nhit'
+          },
+          yaxis:{
+            min: 0,
+            tickRenderer: $.jqplot.CanvasAxisTickRenderer,
+            tickOptions: {formatString: "%d "},
+            labelRenderer: $.jqplot.CanvasAxisLabelRenderer,
+            label: 'Counts'
+          }
+        }
       });
+
+      var crateeventplot = new histogram('crateeventchart','crateevent',2,19,0,19,{
+        title: 'Events per Crate',
+        stackSeries:true,
+        sumHist: true,
+        contextMenu: true, 
+        fixedBins: true,
+        grid: {shadow: false},
+        seriesDefaults:{renderer:$.jqplot.BarRenderer,
+          rendererOptions:{
+            barMargin: 1
+        },
+        shadow: false},
+        axes:{
+          xaxis: {
+            ticks: [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19],
+            tickRenderer: $.jqplot.CanvasAxisTickRenderer,
+            tickOptions: {formatString: "%d"},
+            labelRenderer: $.jqplot.CanvasAxisLabelRenderer,
+            label: 'Crate #'
+          },
+          yaxis:{
+            min: 0,
+            tickRenderer: $.jqplot.CanvasAxisTickRenderer,
+            tickOptions: {formatString: "%d "},
+            labelRenderer: $.jqplot.CanvasAxisLabelRenderer,
+            label: 'Event Count'
+          }
+        }
+      });
+
+      var ticks = [];
+      for (var i=0;i<19;i++){
+        ticks[i*16] = [i*16,i];
+        for (var j=1;j<16;j++){
+          ticks[i*16+j] = 0;
+        }
+      }
+      ticks[303] = [304,' '];
+      console.log(ticks);
+
+      var cardeventplot = new histogram('cardeventchart','cardevent',2,304,0,304,{
+        title: 'Events per Card',
+        stackSeries:true,
+        sumHist: true,
+        contextMenu: true, 
+        fixedBins: true,
+        grid: {shadow: false},
+        seriesDefaults:{renderer:$.jqplot.BarRenderer,
+          rendererOptions:{
+            barMargin: 1
+        },
+        shadow: false},
+        axes:{
+          xaxis: {
+            ticks: ticks,
+            tickRenderer: $.jqplot.CanvasAxisTickRenderer,
+            tickOptions: {formatString: "%d"},
+            labelRenderer: $.jqplot.CanvasAxisLabelRenderer,
+            label: 'Card (by crate #)'
+          },
+          yaxis:{
+            min: 0,
+            tickRenderer: $.jqplot.CanvasAxisTickRenderer,
+            tickOptions: {formatString: "%d "},
+            labelRenderer: $.jqplot.CanvasAxisLabelRenderer,
+            label: 'Event Count'
+          }
+        }
+      });
+
+
+
+      function update(howmany) {
+        $.ajax({
+          async: true,
+          url: "./data?nhit=" + nhitplot.lastkey + "&crateevent=" + crateeventplot.lastkey
+            + "&cardevent=" + cardeventplot.lastkey,
+          dataType:"json",
+          success: function(data){
+            nhitplot.json_update(data);
+            crateeventplot.json_update(data);
+//            cardeventplot.json_update(data);
+            t = setTimeout(timer,1);
+          },
+          error: function(jqXHR, textStatus, errorThrown){
+            console.log(errorThrown);
+          }
+        });
+      }
+
+      function timer(howmany){
+        update(howmany);
+      }
+
+
+
+      timer(1);
 
       $('.vmenu .first_li').live('click',function(){
         if ($(this).text() == "Stop"){
-          stop = 1;
+          $(this).parent().data("plot").updating = false;
           $(this).html("<span>Start</span>");
-          lastkey = -1;
+          $(this).parent().data("plot").lastkey = -1;
         }
         else if ($(this).text() == "Clear"){
-          for (var i=0;i<100;i++){
-            nhitplot.series[0].data[i][1] = 0;
-            nhitplot.series[1].data[i][1] = 0;
-          }
-          nhitplot.replot({resetAxes:true});
-          firstkey = -1;
-          lastkey = -1;
+          $(this).parent().data("plot").clear();
         }
         else if ($(this).text() == "Load 5"){
           clearTimeout(t);
-          history(5);
+          $(this).parent().data("plot").get_history(5);
           t = setTimeout(timer,500);
         }
         else if ($(this).text() == "Load 10"){
           clearTimeout(t);
-          history(10);
+          $(this).parent().data("plot").get_history(10);
           t = setTimeout(timer,500);
         }
-        else if ($(this).text() == "Stop"){
+        else if ($(this).text() == "Start"){
           $(this).html("<span>Stop</span>");
-          stop = 0;
-          clearTimeout(t);
-          timer(1);
+          $(this).parent().data("plot").updating = true;
         }
         else if ($(this).text() == "Rebin"){
-          var numbins = prompt("How many bins??","5");
-          nhitplot.rebin(parseInt(numbins));
+          var hist = $(this).parent().data("plot");
+          var box = new Boxy(rebin_form, {
+            title: "Rebin",
+            draggable: false,
+            modal: true,
+            behaviours: function(r){
+              r.find('input[name=numbins]').val(hist.numbins).focus();
+              r.find('input[name=min]').val(hist.min);
+              r.find('input[name=max]').val(hist.max);
+              r.find('input[name=submit]').click(function(){
+                var numbins = r.find('input[name=numbins]').val();
+                var min = r.find('input[name=min]').val();
+                var max = r.find('input[name=max]').val();
+                hist.rebin(parseInt(numbins),parseInt(min),parseInt(max));
+                Boxy.get(this).hideAndUnload();
+
+                return false;
+              });
+            }
+          })
         }
 
         $('.vmenu').hide();
         $('.overlay').hide();
       });
 
+      rebin_form = '<div style="width:300px"<form class="rebin"><table><tr><td><label for="numbins">Number of bins</label></td><td><input type="text" name="numbins" value=""></td></tr><tr><td><label for="min">Minimum</label></td><td><input type="text" name="min" value=""></td></tr><tr><td><label for="max">Maximum</label></td><td><input type="text" name="max" value=""></td></tr><tr></table><input type="submit" name="submit" value="Rebin"></form></div>';
 
-      var jsonurl = "./data"
-
-      var nhitplot = new histogram('nhitchart',2,50,0,500,{
-        title: 'Histogram',
-        stackSeries:true,
-        linesPerBin: false,
-        sumhist: true,
-        seriesDefaults:{renderer:$.jqplot.BarRenderer,
-          rendererOptions:{
-            barMargin: 1
-        }},
-        axes:{
-          xaxis: {
-            tickRenderer: $.jqplot.CanvasAxisTickRenderer,
-            tickOptions: {formatString: "%d"}
-          },
-          yaxis:{
-            min: 0,
-            tickRenderer: $.jqplot.CanvasAxisTickRenderer,
-            tickOptions: {formatString: "%3.1f "}
-          }
-        }
       });
-      
-      function update(howmany) {
-        var tempurl = jsonurl;
-        tempurl += "?nhit=" + lastkey;
-        $.ajax({
-          async: false,
-          url: tempurl,
-          dataType:"json",
-          success: function(data){
-            parsedata(data);
-          },
-          error: function(jqXHR, textStatus, errorThrown){
-            console.log(errorThrown);
-          }
-        });
-        nhitplot.replot();
-      }
-
-      function history(howmany){
-        if (firstkey != 0){
-          var tempurl = jsonurl + "?history=nhit&startkey=" + (firstkey-howmany) + "&endkey=" + (firstkey-1);
-          $.ajax({
-            async: false,
-            url: tempurl,
-            dataType:"json",
-            success: function(data){
-              parsehistory(data);
-            },
-            error: function(jqXHR, textStatus, errorThrown){
-              console.log(errorThrown);
-            }
-          });
-          nhitplot.replot();
-        }
-      }
-
-      function parsehistory(fulldata){
-        var data = fulldata[1];
-        var maxkey = fulldata[0][1];
-        var minkey = fulldata[0][0];
-
-        if (maxkey >= 0){
-          if (firstkey < 0 || minkey < firstkey){
-            firstkey = minkey;
-          }
-          if (lastkey < 0){
-            lastkey = maxkey;
-          }
-        }
-        nhitplot.sum_items(data);
-      }
-
-      function parsedata(fulldata){
-        fulldata = fulldata['nhit'];
-        var data = fulldata[1];
-        var maxkey = fulldata[0];
-        var minkey = maxkey - data.length + 1;
-
-        if (maxkey >= 0){
-          if (firstkey < 0){
-            firstkey = minkey;
-          }
-          lastkey = maxkey;
-        }
-        nhitplot.sum_items(data);
-      }
-
-      function timer(howmany){
-        if (stop == 1){
-          return;
-        }
-        update(howmany);
-        t = setTimeout(timer,500);
-      }
-
-      // last key gets cleared when you clear the data or stop the plot
-      // that way when you restart it, you only get one item, not everything that
-      // happened since you stopped it
-      lastkey = -1;
-      // firstkey gets cleared when you clear the data, otherwise stays.
-      firstkey = -1;
-      timer(1);
-    });
-  </script>
-</html>
+    </script>
+  </html>
 
