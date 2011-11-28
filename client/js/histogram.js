@@ -68,6 +68,7 @@ histogram = function(loc,name,numseries,numbins,min,max,options){
     }
     this.ticks[2*i+1] = 0;
   }
+  this.series[0].bins[0][1] = 100;
   if ((this.numbins%this.bins_per_label) == 0){
     this.ticks[2*this.numbins] = this.max;
   }

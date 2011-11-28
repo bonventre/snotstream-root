@@ -2479,14 +2479,24 @@
             var resetAxes = opts.resetAxes || false;
             this.target.trigger('jqplotPreReplot');
             
-            if (clear) {
-                this.destroy();
+            //if (clear) {
+            //    this.destroy();
+            //}
+            //this.reInitialize();
+            //if (resetAxes) {
+            //    this.resetAxesScale(resetAxes, opts.axes);
+            //}
+            for (var i=0; i<this.series.length; i++) {
+                this.populatePlotData(this.series[i], i);
             }
-            this.reInitialize();
-            if (resetAxes) {
-                this.resetAxesScale(resetAxes, opts.axes);
+            this._sumy = 0;
+            this._sumx = 0;
+            for (i=0; i<this.series.length; i++) {
+                this._sumy += this.series[i]._sumy;
+                this._sumx += this.series[i]._sumx;
             }
-            this.draw();
+
+            this.quickdraw();
             this.target.trigger('jqplotPostReplot');
         };
         
@@ -2527,6 +2537,206 @@
             this.draw();
             this.target.trigger('jqplotPostRedraw');
         };
+
+        // method: quickdraw
+        // Draws all elements of the plot into the container.
+        // Does not clear the container before drawing.
+        this.quickdraw = function(){
+            if (this.drawIfHidden || this.target.is(':visible')) {
+                this.target.trigger('jqplotPreDraw');
+                var i, j;
+                for (i=0; i<$.jqplot.preDrawHooks.length; i++) {
+                    $.jqplot.preDrawHooks[i].call(this);
+                }
+                for (i=0; i<this.preDrawHooks.hooks.length; i++) {
+                    this.preDrawHooks.hooks[i].call(this);
+                }
+                // create an underlying canvas to be used for special features.
+                //this.target.append(this.baseCanvas.createElement({left:0, right:0, top:0, bottom:0}, 'jqplot-base-canvas', null, this));
+                //this.baseCanvas.setContext();
+                //this.target.append(this.title.draw());
+                //this.title.pack({top:0, left:0});
+                
+                // make room  for the legend between the grid and the edge.
+                //var legendElem = this.legend.draw();
+                
+                //var gridPadding = {top:0, left:0, bottom:0, right:0};
+                
+                //if (this.legend.placement == "outsideGrid") {
+                    // temporarily append the legend to get dimensions
+                    //this.target.append(legendElem);
+                    //switch (this.legend.location) {
+                        //case 'n':
+                            //gridPadding.top += this.legend.getHeight();
+                            //break;
+                        //case 's':
+                            //gridPadding.bottom += this.legend.getHeight();
+                            //break;
+                        //case 'ne':
+                        //case 'e':
+                        //case 'se':
+                            //gridPadding.right += this.legend.getWidth();
+                            //break;
+                        //case 'nw':
+                        //case 'w':
+                        //case 'sw':
+                            //gridPadding.left += this.legend.getWidth();
+                            //break;
+                        //default:  // same as 'ne'
+                            //gridPadding.right += this.legend.getWidth();
+                            //break;
+                    //}
+                    //legendElem = legendElem.detach();
+                //}
+                
+                //var ax = this.axes;
+                // draw the yMidAxis first, so xaxis of pyramid chart can adjust itself if needed.
+                //for (i=0; i<12; i++) {
+                    //name = _axisNames[i];
+                    //this.target.append(ax[name].draw(this.baseCanvas._ctx, this));
+                    //ax[name].set();
+                //}
+                //if (ax.yaxis.show) {
+                    //gridPadding.left += ax.yaxis.getWidth();
+                //}
+                //var ra = ['y2axis', 'y3axis', 'y4axis', 'y5axis', 'y6axis', 'y7axis', 'y8axis', 'y9axis'];
+                //var rapad = [0, 0, 0, 0, 0, 0, 0, 0];
+                //var gpr = 0;
+                //var n;
+                //for (n=0; n<8; n++) {
+                    //if (ax[ra[n]].show) {
+                        //gpr += ax[ra[n]].getWidth();
+                        //rapad[n] = gpr;
+                    //}
+                //}
+                //gridPadding.right += gpr;
+                //if (ax.x2axis.show) {
+                    //gridPadding.top += ax.x2axis.getHeight();
+                //}
+                //if (this.title.show) {
+                    //gridPadding.top += this.title.getHeight();
+                //}
+                //if (ax.xaxis.show) {
+                    //gridPadding.bottom += ax.xaxis.getHeight();
+                //}
+                
+                // end of gridPadding adjustments.
+
+                // if user passed in gridDimensions option, check against calculated gridPadding
+                //if (this.options.gridDimensions && $.isPlainObject(this.options.gridDimensions)) {
+                    //var gdw = parseInt(this.options.gridDimensions.width, 10) || 0;
+                    //var gdh = parseInt(this.options.gridDimensions.height, 10) || 0;
+                    //var widthAdj = (this._width - gridPadding.left - gridPadding.right - gdw)/2;
+                    //var heightAdj = (this._height - gridPadding.top - gridPadding.bottom - gdh)/2;
+
+                    //if (heightAdj >= 0 && widthAdj >= 0) {
+                        //gridPadding.top += heightAdj;
+                        //gridPadding.bottom += heightAdj;
+                        //gridPadding.left += widthAdj;
+                        //gridPadding.right += widthAdj;
+                    //}
+                //}
+                //var arr = ['top', 'bottom', 'left', 'right'];
+                //for (var n in arr) {
+                    //if (this._gridPadding[arr[n]] == null && gridPadding[arr[n]] > 0) {
+                        //this._gridPadding[arr[n]] = gridPadding[arr[n]];
+                    //}
+                    //else if (this._gridPadding[arr[n]] == null) {
+                        //this._gridPadding[arr[n]] = this._defaultGridPadding[arr[n]];
+                    //}
+                //}
+                
+                //var legendPadding = (this.legend.placement == 'outsideGrid') ? {top:this.title.getHeight(), left: 0, right: 0, bottom: 0} : this._gridPadding;
+            
+                //ax.xaxis.pack({position:'absolute', bottom:this._gridPadding.bottom - ax.xaxis.getHeight(), left:0, width:this._width}, {min:this._gridPadding.left, max:this._width - this._gridPadding.right});
+                //ax.yaxis.pack({position:'absolute', top:0, left:this._gridPadding.left - ax.yaxis.getWidth(), height:this._height}, {min:this._height - this._gridPadding.bottom, max: this._gridPadding.top});
+                //ax.x2axis.pack({position:'absolute', top:this._gridPadding.top - ax.x2axis.getHeight(), left:0, width:this._width}, {min:this._gridPadding.left, max:this._width - this._gridPadding.right});
+                //for (i=8; i>0; i--) {
+                    //ax[ra[i-1]].pack({position:'absolute', top:0, right:this._gridPadding.right - rapad[i-1]}, {min:this._height - this._gridPadding.bottom, max: this._gridPadding.top});
+                //}
+                //var ltemp = (this._width - this._gridPadding.left - this._gridPadding.right)/2.0 + this._gridPadding.left - ax.yMidAxis.getWidth()/2.0;
+                //ax.yMidAxis.pack({position:'absolute', top:0, left:ltemp, zIndex:9, textAlign: 'center'}, {min:this._height - this._gridPadding.bottom, max: this._gridPadding.top});
+            
+                //this.target.append(this.grid.createElement(this._gridPadding, this));
+                //this.grid.draw();
+                
+                // put the shadow canvases behind the series canvases so shadows don't overlap on stacked bars.
+                //for (i=0; i<this.series.length; i++) {
+                    // draw series in order of stacking.  This affects only
+                    // order in which canvases are added to dom.
+                    //j = this.seriesStack[i];
+                    //this.target.append(this.series[j].shadowCanvas.createElement(this._gridPadding, 'jqplot-series-shadowCanvas', null, this));
+                    //this.series[j].shadowCanvas.setContext();
+                    //this.series[j].shadowCanvas._elem.data('seriesIndex', j);
+                //}
+                
+                //for (i=0; i<this.series.length; i++) {
+                    // draw series in order of stacking.  This affects only
+                    // order in which canvases are added to dom.
+                    //j = this.seriesStack[i];
+                    //this.target.append(this.series[j].canvas.createElement(this._gridPadding, 'jqplot-series-canvas', null, this));
+                    //this.series[j].canvas.setContext();
+                    //this.series[j].canvas._elem.data('seriesIndex', j);
+                //}
+                // Need to use filled canvas to capture events in IE.
+                // Also, canvas seems to block selection of other elements in document on FF.
+                //this.target.append(this.eventCanvas.createElement(this._gridPadding, 'jqplot-event-canvas', null, this));
+                //this.eventCanvas.setContext();
+                //this.eventCanvas._ctx.fillStyle = 'rgba(0,0,0,0)';
+                //this.eventCanvas._ctx.fillRect(0,0,this.eventCanvas._ctx.canvas.width, this.eventCanvas._ctx.canvas.height);
+            
+                // bind custom event handlers to regular events.
+                //this.bindCustomEvents();
+            
+                // draw legend before series if the series needs to know the legend dimensions.
+                //if (this.legend.preDraw) {  
+                    //this.eventCanvas._elem.before(legendElem);
+                    //this.legend.pack(legendPadding);
+                    //if (this.legend._elem) {
+                        //this.drawSeries({legendInfo:{location:this.legend.location, placement:this.legend.placement, width:this.legend.getWidth(), height:this.legend.getHeight(), xoffset:this.legend.xoffset, yoffset:this.legend.yoffset}});
+                    //}
+                    //else {
+                        //this.drawSeries();
+                    //}
+                //}
+                //else {  // draw series before legend
+                    this.drawSeries();
+                    //if (this.series.length) {
+                        //$(this.series[this.series.length-1].canvas._elem).after(legendElem);
+                    //}
+                    //this.legend.pack(legendPadding);                
+                //}
+            
+                // register event listeners on the overlay canvas
+                //for (var i=0; i<$.jqplot.eventListenerHooks.length; i++) {
+                    // in the handler, this will refer to the eventCanvas dom element.
+                    // make sure there are references back into plot objects.
+                    //this.eventCanvas._elem.bind($.jqplot.eventListenerHooks[i][0], {plot:this}, $.jqplot.eventListenerHooks[i][1]);
+                //}
+            
+                // register event listeners on the overlay canvas
+                //for (var i=0; i<this.eventListenerHooks.hooks.length; i++) {
+                    // in the handler, this will refer to the eventCanvas dom element.
+                    // make sure there are references back into plot objects.
+                    //this.eventCanvas._elem.bind(this.eventListenerHooks.hooks[i][0], {plot:this}, this.eventListenerHooks.hooks[i][1]);
+                //}
+
+                //for (var i=0; i<$.jqplot.postDrawHooks.length; i++) {
+                    //$.jqplot.postDrawHooks[i].call(this);
+                //}
+
+                //for (var i=0; i<this.postDrawHooks.hooks.length; i++) {
+                    //this.postDrawHooks.hooks[i].call(this);
+                //}
+            
+                if (this.target.is(':visible')) {
+                    this._drawCount += 1;
+                }
+            
+                this.target.trigger('jqplotPostDraw', [this]);
+            }
+        };
+
         
         // method: draw
         // Draws all elements of the plot into the container.
