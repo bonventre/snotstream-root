@@ -2744,7 +2744,7 @@
                                             //ax.yMidAxis.pack({position:'absolute', top:0, left:ltemp, zIndex:9, textAlign: 'center'}, {min:this._height - this._gridPadding.bottom, max: this._gridPadding.top});
 
                                             //this.target.append(this.grid.createElement(this._gridPadding, this));
-                                            //this.grid.draw();
+                                            this.grid.draw();
 
                                             // put the shadow canvases behind the series canvases so shadows don't overlap on stacked bars.
                                             //for (i=0; i<this.series.length; i++) {
