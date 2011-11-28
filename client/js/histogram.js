@@ -100,7 +100,7 @@ histogram = function(loc,name,numseries,numbins,min,max,options){
 }
 
 histogram.prototype.replot = function(){
-  this.plot.replot({resetAxes:true});
+  this.plot.replot({resetAxes:["yaxis"]});
 }
 
 histogram.prototype.add_items = function(items){

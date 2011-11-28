@@ -238,5 +238,11 @@
     $.jqplot.CanvasAxisTickRenderer.prototype.pack = function() {
         this._textRenderer.draw(this._elem.get(0).getContext("2d"), this.label);
     };
+
+
+    $.jqplot.CanvasAxisTickRenderer.prototype.repack = function() {
+        this._elem.get(0).getContext('2d').clearRect(0, 0, this._elem.get(0).width, this._elem.get(0).height);
+        this._textRenderer.draw(this._elem.get(0).getContext("2d"), this.label);
+    };
     
 })(jQuery);
