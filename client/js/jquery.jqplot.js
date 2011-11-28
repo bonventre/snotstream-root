@@ -203,6 +203,15 @@
         }
         
         var myCanvases = [];
+
+        this.findCanvas = function(obj){
+          for (var i = 0; i < $.jqplot.CanvasManager.canvases.length; i++){
+            if (obj === $.jqplot.CanvasManager.canvases[i]){
+              return i;
+            }
+          }
+          return -1;
+        }
         
         this.getCanvas = function() {
             var canvas;
@@ -2530,10 +2539,16 @@
                 for (var i = 0; i < t.length; i++) {
                   var el = t[i]._elem;
                   if (el) {
+                    var cn = this.canvasManager.findCanvas(el.get(0));
+                    if (cn >= 0){
+                      this.canvasManager.freeCanvas(cn);
+                    }
                     // if canvas renderer
                     if ($.jqplot.use_excanvas && window.G_vmlCanvasManager.uninitElement !== undefined) {
                       window.G_vmlCanvasManager.uninitElement(el.get(0));
                     }
+
+                    
                     el.emptyForce();
                     el = null;
                     t._elem = null;
@@ -6848,6 +6863,33 @@ return rgb;
       var pixellength = offmax - offmin;
       var unitlength = max - min;
 
+      this.p2u = function(p){
+        return (p - offmin) * unitlength / pixellength + min;
+      };
+
+      this.u2p = function(u){
+        return (u - min) * pixellength / unitlength + offmin;
+      };
+
+      if (this.name == 'xaxis' || this.name == 'x2axis'){
+        this.series_u2p = function(u){
+          return (u - min) * pixellength / unitlength;
+        };
+        this.series_p2u = function(p){
+          return p * unitlength / pixellength + min;
+        };
+      }
+
+      else {
+        this.series_u2p = function(u){
+          return (u - max) * pixellength / unitlength;
+        };
+        this.series_p2u = function(p){
+          return p * unitlength / pixellength + max;
+        };
+      }
+
+
       if (this.show) {
         if (this.name == 'xaxis' || this.name == 'x2axis') {
           for (var i=0; i<ticks.length; i++) {
@@ -7707,28 +7749,28 @@ return rgb;
 
         // $('<td class="jqplot-table-legend" style="text-align:center;padding-top:'+rs+';">'+
           // '<div><div class="jqplot-table-legend-swatch" style="background-color:'+color+';border-color:'+color+';"></div>'+
-// '</div></td>').appendTo(tr);
+          // '</div></td>').appendTo(tr);
       }
-    if (this.showLabels) {
-      td = $(document.createElement('td'));
-      td.addClass('jqplot-table-legend jqplot-table-legend-label');
-      td.css('paddingTop', rs);
-      tr.append(td);
+      if (this.showLabels) {
+        td = $(document.createElement('td'));
+        td.addClass('jqplot-table-legend jqplot-table-legend-label');
+        td.css('paddingTop', rs);
+        tr.append(td);
 
-      // elem = $('<td class="jqplot-table-legend" style="padding-top:'+rs+';"></td>');
-      // elem.appendTo(tr);
-      if (this.escapeHtml) {
-        td.text(label);
+        // elem = $('<td class="jqplot-table-legend" style="padding-top:'+rs+';"></td>');
+        // elem.appendTo(tr);
+        if (this.escapeHtml) {
+          td.text(label);
+        }
+        else {
+          td.html(label);
+        }
       }
-      else {
-        td.html(label);
-      }
-    }
-    td = null;
-    div0 = null;
-    div1 = null;
-    tr = null;
-    elem = null;
+      td = null;
+      div0 = null;
+      div1 = null;
+      tr = null;
+      elem = null;
     };
 
     // called with scope of legend
