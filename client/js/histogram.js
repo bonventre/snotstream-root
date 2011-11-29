@@ -1,12 +1,15 @@
 
 histogram = function(loc,name,numseries,numbins,min,max,options){
+  if (loc == null){
+    return;
+  }
   this.loc = loc;
   this.series = [];
   this.numseries = numseries;
   this.numbins = numbins;
   this.min = min;
   this.max = max;
-  this.options = options;
+  this.options = (options != null) ? options : {};
   this.delta = (max-min)/numbins;
   this.numlabels = 4;
   this.firstkey = -1;
@@ -90,7 +93,9 @@ histogram = function(loc,name,numseries,numbins,min,max,options){
   else{
     this.options.axes = {xaxis: {ticks: this.ticks}};
   }
+}
 
+histogram.prototype.plot = function(){
   var temp_series = [];
   for (var i=0;i<this.numseries;i++){
     temp_series[i] = this.series[i].bins;
@@ -178,7 +183,7 @@ histogram.prototype.sum_series = function(series){
     }
     for (var i=0;i<this.numbins;i++){
       for (var j=0;j<series.length;j++){
-        this.series[1].bins[i][1] = series[j][i];
+        this.series[1].bins[i][1] += series[j][i];
       }
     }
     this.plot.series[0].data = this.series[0].bins;
@@ -357,4 +362,3 @@ histogram.prototype.bind_context_menu = function(){
     return false;
   });
 }
-
