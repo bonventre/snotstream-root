@@ -12,10 +12,6 @@
     <script src="js/plugins/jqplot.barRenderer.js"></script>
     <script src="js/jquery.boxy.js"></script>
     <script src="js/histogram.js"></script>
-    <script src="js/pjs.plot.js"></script>
-    <script src="js/pjs.plot.bargraph.js"></script>
-    <script src="js/pjs.plot.histogram.js"></script>
-    <script src="js/pjs.plot.rategraph.js"></script>
     <link type="text/css" rel="stylesheet" href="css/style.css">
     <link type="text/css" rel="stylesheet" href="css/boxy.css">
     <link type="text/css" rel="stylesheet" href="http://fonts.googleapis.com/css?family=Droid+Sans"/> 
@@ -64,26 +60,6 @@
         <div class="first_li"><span>Load 5</span></div>
         <div class="first_li"><span>Load 10</span></div>
       </div>
-            <div id="cardeventchart2" style="margin:50px;height:400px;width:1000px;float:left;" class="plot"></div>
-      <div class="vmenu">
-        <div class="first_li"><span>Clear</span></div>
-        <div class="sep_li"></div>
-        <div class="first_li"><span>Stop</span></div>
-        <div class="sep_li"></div>
-        <div class="first_li"><span>Load 5</span></div>
-        <div class="first_li"><span>Load 10</span></div>
-      </div>
-      <div id="cardeventchart3" style="margin:50px;height:400px;width:1000px;float:left;" class="plot"></div>
-      <div class="vmenu">
-        <div class="first_li"><span>Clear</span></div>
-        <div class="sep_li"></div>
-        <div class="first_li"><span>Stop</span></div>
-        <div class="sep_li"></div>
-        <div class="first_li"><span>Load 5</span></div>
-        <div class="first_li"><span>Load 10</span></div>
-      </div>
-
-
 
 
     </div>
@@ -95,13 +71,12 @@
       $("#header").load("header.html");
       $("#footer").load("footer.html");
 
-      var nhitplot = new pjs.plot.histogram('nhitchart','nhit',50,0,500,{
+      var nhitplot = new histogram('nhitchart','nhit',2,50,0,500,{
         title: 'Nhit',
         stackSeries:true,
         linesPerBin: false,
         sumHist: true,
         contextMenu: true, 
-        resetAxes: ["yaxis"],
         grid: {shadow: false},
         seriesDefaults:{renderer:$.jqplot.BarRenderer,
           rendererOptions:{
@@ -125,12 +100,12 @@
         }
       });
 
-      var crateeventplot = new pjs.plot.rateGraph('crateeventchart','craterate',19,0,19,{
+      var crateeventplot = new histogram('crateeventchart','crateevent',2,19,0,19,{
         title: 'Events per Crate',
         stackSeries:true,
         sumHist: true,
         contextMenu: true, 
-        resetAxes: ["yaxis"],
+        fixedBins: true,
         grid: {shadow: false},
         seriesDefaults:{renderer:$.jqplot.BarRenderer,
           rendererOptions:{
@@ -139,6 +114,7 @@
         shadow: false},
         axes:{
           xaxis: {
+            ticks: [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19],
             tickRenderer: $.jqplot.CanvasAxisTickRenderer,
             tickOptions: {formatString: "%d"},
             labelRenderer: $.jqplot.CanvasAxisLabelRenderer,
@@ -162,13 +138,14 @@
         }
       }
       ticks[303] = [304,' '];
+      console.log(ticks);
 
-      var cardeventplot = new pjs.plot.barGraph('cardeventchart','cardevent',304,0,304,{
+      var cardeventplot = new histogram('cardeventchart','cardevent',2,304,0,304,{
         title: 'Events per Card',
         stackSeries:true,
         sumHist: true,
         contextMenu: true, 
-        resetAxes: ["yaxis"],
+        fixedBins: true,
         grid: {shadow: false},
         seriesDefaults:{renderer:$.jqplot.BarRenderer,
           rendererOptions:{
@@ -193,20 +170,18 @@
         }
       });
 
-      nhitplot.draw();
-      crateeventplot.draw();
-      cardeventplot.draw();
+
 
       function update(howmany) {
         $.ajax({
           async: true,
-          url: "./data?nhit=" + nhitplot.lastKey + "&craterate=" + crateeventplot.lastKey
-            + "&cardevent=" + cardeventplot.lastKey,
+          url: "./data?nhit=" + nhitplot.lastkey + "&crateevent=" + crateeventplot.lastkey
+            + "&cardevent=" + cardeventplot.lastkey,
           dataType:"json",
           success: function(data){
-            nhitplot.update(data);
-            crateeventplot.update(data);
-            cardeventplot.update(data);
+            nhitplot.json_update(data);
+            crateeventplot.json_update(data);
+            cardeventplot.json_update(data);
             t = setTimeout(timer,1);
           },
           error: function(jqXHR, textStatus, errorThrown){
@@ -225,25 +200,26 @@
 
       $('.vmenu .first_li').live('click',function(){
         if ($(this).text() == "Stop"){
+          $(this).parent().data("plot").updating = false;
           $(this).html("<span>Start</span>");
-          $(this).parent().data("plot").stop();
+          $(this).parent().data("plot").lastkey = -1;
         }
         else if ($(this).text() == "Clear"){
           $(this).parent().data("plot").clear();
         }
         else if ($(this).text() == "Load 5"){
           clearTimeout(t);
-          $(this).parent().data("plot").getHistory(5);
+          $(this).parent().data("plot").get_history(5);
           t = setTimeout(timer,500);
         }
         else if ($(this).text() == "Load 10"){
           clearTimeout(t);
-          $(this).parent().data("plot").getHistory(10);
+          $(this).parent().data("plot").get_history(10);
           t = setTimeout(timer,500);
         }
         else if ($(this).text() == "Start"){
           $(this).html("<span>Stop</span>");
-          $(this).parent().data("plot").start();
+          $(this).parent().data("plot").updating = true;
         }
         else if ($(this).text() == "Rebin"){
           var hist = $(this).parent().data("plot");
@@ -252,7 +228,7 @@
             draggable: false,
             modal: true,
             behaviours: function(r){
-              r.find('input[name=numbins]').val(hist.numBins).focus();
+              r.find('input[name=numbins]').val(hist.numbins).focus();
               r.find('input[name=min]').val(hist.min);
               r.find('input[name=max]').val(hist.max);
               r.find('input[name=submit]').click(function(){
