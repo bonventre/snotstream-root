@@ -1,10 +1,17 @@
 import sys
-import zmq
+import collections
+import avalanche
 
-from fifo import ring_buff
-from dispatch import stream_in
-from jsonserver import jsonserver
-        
+import jsonserver
+
+class IndexedDeque(collections.deque):
+    def __init__(self, *args, **kwargs):
+        collections.deque.__init__(self, *args, **kwargs)
+        self.update_seq = -1 * self.__len__()
+    def __append__(self, x):
+        collections.deque.append(self, x)
+        self.update_seq += 1
+
 if __name__ == '__main__':
     if len(sys.argv) > 1:
         address = sys.argv[1]
@@ -12,28 +19,13 @@ if __name__ == '__main__':
         address = 'tcp://*:5024'
 
     fifos = {}
-    fifos['nhit'] = ring_buff(100)
-    fifos['crateevent'] = ring_buff(100)
-    fifos['cardevent'] = ring_buff(100)
-    fifos['craterate'] = ring_buff(100)
+    fifos['nhit'] = IndexedDeque([], 100)
+    fifos['crateevent'] = IndexedDeque([], 100)
+    fifos['cardevent'] = IndexedDeque([], 100)
+    fifos['craterate'] = IndexedDeque([], 100)
 
-    # set up zeromq socket
-    context = zmq.Context()
-    socket = context.socket(zmq.SUB)
-    socket.setsockopt(zmq.SUBSCRIBE, '')
-    socket.bind(address)
+    dispatch_client = avalanche.Client(address)
 
-    stream = stream_in(socket,fifos)
-    stream.start()
-
-    httpd = jsonserver('', 8051,fifos)
+    httpd = jsonserver.JSONServer('', 8051, dispatch_client, fifos)
     httpd.serve_forever()
 
-    while True:
-        try:
-            if stream.isAlive():
-                stream.join(1)
-        except KeyboardInterrupt:
-            print "Ctrl-c received! Sending kill to threads..."
-            stream.kill_received = True
-            break
