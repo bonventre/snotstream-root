@@ -23,6 +23,11 @@ class stream_in(threading.Thread):
                 if (rec.RecordType == 1):
                     event = rec.Rec
                     event.__class__ = ROOT.RAT.DS.PackedEvent
+
+                    clock10part1 = event.MTCInfo[0]
+                    clock10part2 = event.MTCInfo[1] & 0x1FFFF
+                    clockCount10 = (clock10part2 << 32) + clock10part1
+
                     pevent = parsed_event(event)
 
                     for i in self.fifos:
@@ -30,6 +35,10 @@ class stream_in(threading.Thread):
                             self.fifos[i].push(int(event.NHits))
                         if (i == 'crateevent'):
                             self.fifos[i].push(pevent.crateevents)
+                        if (i == 'cardevent'):
+                            self.fifos[i].push(pevent.cardevents)
+                        if (i == 'craterate'):
+                            self.fifos[i].push([pevent.crateevents,clockCount10])
             else:
                 print 'Error deserializing message data'
         print 'done!'
@@ -49,8 +58,10 @@ class parsed_event():
     def __init__(self,event):
         self.hits = []
         self.crateevents = [0 for i in xrange(19)]
+        self.cardevents = [0 for i in xrange(304)]
         for bundle in event.PMTBundles:
             self.hits.append(hit(bundle))
         for i in self.hits:
             self.crateevents[i.crate] += 1
+            self.cardevents[i.crate*16+i.card] += 1
 

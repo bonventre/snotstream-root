@@ -31,10 +31,15 @@ class jsonserver(WSGIServer):
             results = self.fifos[history].grab(int(startkey),int(endkey))
             return [str(results)]
 
-        results = {}
+        results = '{'
+        started = 0
         for i in self.fifos:
             currentkey = query.get(i,[''])[0]
             if (currentkey):
-                results[i] = self.fifos[i].pull(int(currentkey))
+                if (started != 0):
+                    results += ','
+                started += 1
+                results += '"' + i + '":' + str(self.fifos[i].pull(int(currentkey)))
+        results += '}'
         return [str(results)]
 

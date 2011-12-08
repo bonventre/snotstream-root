@@ -14,6 +14,8 @@ if __name__ == '__main__':
     fifos = {}
     fifos['nhit'] = ring_buff(100)
     fifos['crateevent'] = ring_buff(100)
+    fifos['cardevent'] = ring_buff(100)
+    fifos['craterate'] = ring_buff(100)
 
     # set up zeromq socket
     context = zmq.Context()
