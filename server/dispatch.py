@@ -1,17 +1,29 @@
+import zmq
+import threading
+import avalanche
+from rat import ROOT
+
 class DispatchClient(threading.Thread, avalanche.Client):
     '''wrapper for avalanche.Client that writes received event data into some
     fifo buffers. runs as a threading.Thread thread so we can write to the
     buffers while serving.'''
     def __init__(self, address, buffers):
-        self.kill_received = False
+        self.request_exit = False
         self.buffers = buffers
         avalanche.Client.__init__(self, address)
         threading.Thread.__init__(self)
     def run(self):
         '''perform the threaded action, per threading.Thread'''
-        print 'DispatchClient: listening to', self.client.address
-        while not self.kill_received:
-            rec = client.recv_object(ROOT.RAT.DS.PackedRec.Class())
+        print 'DispatchClient: listening to', self.address
+        while True:
+            while True:
+                if self.request_exit:
+                    print 'DispatchClient: exiting'
+                    return
+                else:
+                    rec = self.recv_object(ROOT.RAT.DS.PackedRec.Class(), flags=zmq.NOBLOCK)
+                    if rec:
+                        break
 
             if rec:
                 print 'DispatchClient: received PackedRec of type', rec.RecordType
@@ -33,7 +45,6 @@ class DispatchClient(threading.Thread, avalanche.Client):
             else:
                 print 'DispatchClient: error deserializing message data'
 
-        print 'DispatchClient: done.'
 
 def get_bits(arg, loc, n):
     '''pull bits out a number'''

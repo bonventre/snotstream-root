@@ -29,9 +29,17 @@ if __name__ == '__main__':
     fifos['cardevent'] = IndexedDeque([], 100)
     fifos['craterate'] = IndexedDeque([], 100)
 
-    dispatch_client = dispatch.DispatchClient(address, fifos)
-    dispatch_client.start()
+    try:
+        dispatch_client = dispatch.DispatchClient(address, fifos)
+        print 'snotstream: starting dispatcher client'
+        dispatch_client.start()
 
-    httpd = jsonserver.JSONServer('', 8051, fifos)
-    httpd.serve_forever()
+        httpd = jsonserver.JSONServer('', 8051, fifos)
+        print 'snotstream: starting json server'
+        httpd.serve_forever()
+
+    except (KeyboardInterrupt, SystemExit):
+        print 'snotstream: caught SIGINT, exiting'
+        dispatch_client.request_exit = True
+        dispatch_client.join()
 
