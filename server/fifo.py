@@ -1,4 +1,4 @@
-class RingBuffer(list):
+class RingBuffer:
     '''a ring buffer with some incrementing key offset, with an api similar to
     lists. the notable departure is slice, which returns only the available
     subset of what was requested, along with the actual key range returned, e.g.
@@ -26,14 +26,19 @@ class RingBuffer(list):
     def __getitem__(self, i):
         return self.data[i]
 
-    # grab some specific subset of the elements from startkey to endkey,
-    # inclusive.
-    # If not all of that range still exists, returns whatever subset of that range
-    # of keys that is available. If endkey < 0 - i.e. haven't updated yet,
-    # return the latest x elements where x is endkey-startkey+1. 
-    # Returns the actual keys the list returned starts and ends at inclusively, and some
-    # items. If there are no items, returns -1,-1
     def __getslice__(self, startkey, endkey):
+        '''grab some specific subset of the elements from startkey to endkey,
+        inclusive.
+
+        If not all of that range still exists, returns whatever subset of that
+        range of keys that is available. If endkey < 0 - i.e. haven't updated
+        yet, return the latest x elements where x is endkey-startkey+1.
+        
+        Returns the actual keys the list returned starts and ends at, and some
+        items. Note that this is unlike normal list slicing operations!
+        
+        If there are no items, returns ((-1, -1), [])
+        '''
         size = len(self.data)
         if (self.offset + size) == 0 or endkey < startkey:
             return (-1,-1), []

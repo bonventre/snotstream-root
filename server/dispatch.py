@@ -1,6 +1,5 @@
-import zmq
-import threading
 import avalanche
+import threading
 from rat import ROOT
 
 class DispatchClient(threading.Thread, avalanche.Client):
@@ -21,7 +20,7 @@ class DispatchClient(threading.Thread, avalanche.Client):
                     print 'DispatchClient: exiting'
                     return
                 else:
-                    rec = self.recv_object(ROOT.RAT.DS.PackedRec.Class(), flags=zmq.NOBLOCK)
+                    rec = self.recv_object(ROOT.RAT.DS.PackedRec.Class(), flags=avalanche.zmq.NOBLOCK)
                     if rec:
                         break
 
@@ -35,7 +34,6 @@ class DispatchClient(threading.Thread, avalanche.Client):
 
                     for buf in self.buffers:
                         if (buf == 'nhit'):
-                            print event.NHits
                             self.buffers[buf].append(int(event.NHits))
                         elif (buf == 'crateevent'):
                             self.buffers[buf].append(pevent.crateevents)
@@ -53,14 +51,14 @@ def get_bits(arg, loc, n):
     mask = (1<<n) - 1
     return shifted & mask
 
-class Hit():
+class Hit:
     '''represents the crate/card/channel of a pmt hit'''
     def __init__(self, bundle):
         self.crate = get_bits(bundle.Word[0], 21, 5)
         self.card = get_bits(bundle.Word[0], 26, 4)
         self.chan = get_bits(bundle.Word[0], 16, 5)
 
-class ParsedEvent():
+class ParsedEvent:
     '''basic detector event data, parsed from 'packed' data into arrays'''
     def __init__(self, event):
         self.hits = []

@@ -13,7 +13,7 @@ class JSONServer(WSGIServer):
         '''parses the request url to decide what you want
        
         * to normally update an array of charts, data?(chartname)=(current key).
-        * to update with a sublist of keys, data?buffer=(chartname)&startkey=\
+        * to update with a sublist of keys, data?history=(chartname)&startkey=\
             (startkey)&endkey=(endkey)
         '''
         path = env['PATH_INFO'].lstrip('/')
