@@ -32,22 +32,20 @@ Steps for configuring nginx are shown; Apache2 with mod_rewrite enabled is very 
 ### Add JSON server proxy ###
 Add a URL rewrite to proxy `:8051/data` to `:80/data` in `/etc/nginx/conf.d/default` (or whatever). This pipes the JSON output of the snotstream server to a domain where the front-end can see it.
 
-```
-# snotstream proxy
-location /data {
-    proxy_pass         http://127.0.0.1:8051/data;
-    proxy_redirect     off;
-}
-```
+    # snotstream proxy
+    location /data {
+        proxy_pass         http://127.0.0.1:8051/data;
+        proxy_redirect     off;
+    }
+
 
 ### Add a location for the front-end ###
 Serve static files for the snotstream "home page"
-```
-# snotstream front-end
-location / {
-    root               /path/to/snotstream/client;
-}
-```
+
+    # snotstream front-end
+    location / {
+        root               /path/to/snotstream/client;
+    }
 
     $ service nginx restart
 
