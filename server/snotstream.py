@@ -1,10 +1,15 @@
 import sys
 import collections
+import threading
 import avalanche
 
+import dispatch
 import jsonserver
 
 class IndexedDeque(collections.deque):
+    '''wrapper for collections.deque that includes an update sequence number so
+    we can figure out our real displacement.
+    '''
     def __init__(self, *args, **kwargs):
         collections.deque.__init__(self, *args, **kwargs)
         self.update_seq = -1 * self.__len__()
@@ -24,8 +29,9 @@ if __name__ == '__main__':
     fifos['cardevent'] = IndexedDeque([], 100)
     fifos['craterate'] = IndexedDeque([], 100)
 
-    dispatch_client = avalanche.Client(address)
+    dispatch_client = dispatch.DispatchClient(address, fifos)
+    dispatch_client.start()
 
-    httpd = jsonserver.JSONServer('', 8051, dispatch_client, fifos)
+    httpd = jsonserver.JSONServer('', 8051, fifos)
     httpd.serve_forever()
 

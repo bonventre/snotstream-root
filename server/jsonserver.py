@@ -38,11 +38,11 @@ class JSONServer(WSGIServer):
                 start_idx = max(len(b)-startkey, 0)
                 start_idx = len(b)
             else:
-                start_idx = ((startkey - b.update_seq) % (len(b)+1) if startkey > b.update_seq else 0
-                end_idx = ((endkey - b.update_seq) % (len(b)+1) if endkey > b.update_seq else 0
+                start_idx = ((startkey - b.update_seq) % (len(b)+1) if startkey > b.update_seq else 0)
+                end_idx = ((endkey - b.update_seq) % (len(b)+1) if endkey > b.update_seq else 0)
             items = list(numpy.array(b)[start_idx:end_idx]) # deque doesn't have slicing
             results = [(start_idx, end_idx), items]
-            return [json.dumps([results)]
+            return [json.dumps(results)]
 
         # handle '?buffer1=n1&buffer2=n2'-type request
         items = {}
