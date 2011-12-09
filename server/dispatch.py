@@ -35,6 +35,7 @@ class DispatchClient(threading.Thread, avalanche.Client):
 
                     for buf in self.buffers:
                         if (buf == 'nhit'):
+                            print event.NHits
                             self.buffers[buf].append(int(event.NHits))
                         elif (buf == 'crateevent'):
                             self.buffers[buf].append(pevent.crateevents)
@@ -63,6 +64,16 @@ class ParsedEvent():
     '''basic detector event data, parsed from 'packed' data into arrays'''
     def __init__(self, event):
         self.hits = []
-        self.crateevents = numpy.zeros(19)
-        self.cardevents = numpy.zeros(304)
+        self.crateevents = [0 for i in xrange(19)]
+        self.cardevents = [0 for i in xrange(304)]
+
+        clock10part1 = event.MTCInfo[0]
+        clock10part2 = event.MTCInfo[1] & 0x1FFFF
+        self.clockCount10 = (clock10part2 << 32) + clock10part1
+
+        for bundle in event.PMTBundles:
+            hit = Hit(bundle)
+            self.hits.append(hit)
+            self.crateevents[hit.crate] += 1
+            self.cardevents[16*hit.crate+hit.card] += 1
 

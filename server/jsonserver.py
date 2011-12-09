@@ -1,3 +1,4 @@
+import numpy
 import json
 from urlparse import parse_qs
 from wsgiref.simple_server import WSGIServer, WSGIRequestHandler
@@ -28,30 +29,26 @@ class JSONServer(WSGIServer):
         headers = [('content-type', 'application/json')]
         start_response(status, headers)
 
-        # handle '?buffer=name&startkey=n1&endkey=n2'-type request 
-        buf = query.get('buffer',[''])[0]
-        startkey = query.get('startkey',[''])[0]
-        endkey = query.get('endkey',[''])[0]
+        # handle '?history=name&startkey=n1&endkey=n2'-type request 
+        buf = query.get('history',[''])[0]
+        startkey = int(query.get('startkey',[''])[0] or 0)
+        endkey = int(query.get('endkey',[''])[0] or 0)
         if ((buf in self.buffers) and startkey and endkey):
             b = self.buffers[buf]
-            if endkey < 0:
-                start_idx = max(len(b)-startkey, 0)
-                start_idx = len(b)
-            else:
-                start_idx = ((startkey - b.update_seq) % (len(b)+1) if startkey > b.update_seq else 0)
-                end_idx = ((endkey - b.update_seq) % (len(b)+1) if endkey > b.update_seq else 0)
-            items = list(numpy.array(b)[start_idx:end_idx]) # deque doesn't have slicing
-            results = [(start_idx, end_idx), items]
-            return [json.dumps(results)]
+            keys, items = b[startkey:endkey]
+            return [json.dumps([keys, items])]
 
         # handle '?buffer1=n1&buffer2=n2'-type request
         items = {}
         for key in query:
             if key in self.buffers:
                 b = self.buffers[key]
-                currentkey = query.get(key, [''])[0]
-                start = currentkey if currentkey else 0
-                items[key] = list(numpy.array(b[key])[start:])
-        results = [b.update_seq, items]
-        return [json.dumps(results)]
+                currentkey = int(query.get(key, [''])[0])
+                if currentkey == -1:
+                    start = len(b)-1
+                else:
+                    start = currentkey
+                k, l = b[start:]
+                items[key] = (b.offset+len(b), l)
+        return [json.dumps(items)]
 
