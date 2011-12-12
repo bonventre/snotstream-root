@@ -1,5 +1,7 @@
-import avalanche
 import threading
+
+import zmq
+import avalanche
 from rat import ROOT
 
 class DispatchClient(threading.Thread, avalanche.Client):
@@ -20,7 +22,7 @@ class DispatchClient(threading.Thread, avalanche.Client):
                     print 'DispatchClient: exiting'
                     return
                 else:
-                    rec = self.recv_object(ROOT.RAT.DS.PackedRec.Class(), flags=avalanche.zmq.NOBLOCK)
+                    rec = self.recv_object(ROOT.RAT.DS.PackedRec.Class(), flags=zmq.NOBLOCK)
                     if rec:
                         break
 

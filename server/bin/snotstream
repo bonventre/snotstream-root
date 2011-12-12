@@ -4,8 +4,7 @@ import sys
 import collections
 import threading
 
-#fixme
-from snotstream import avalanche
+import avalanche
 
 from snotstream import jsonserver
 from snotstream import dispatch

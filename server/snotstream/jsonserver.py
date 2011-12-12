@@ -1,7 +1,8 @@
-import numpy
 import json
 from urlparse import parse_qs
 from wsgiref.simple_server import WSGIServer, WSGIRequestHandler
+
+import numpy
 
 class JSONServer(WSGIServer):
     def __init__(self, host, port, buffers):
