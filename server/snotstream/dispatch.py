@@ -22,27 +22,24 @@ class DispatchClient(threading.Thread, avalanche.Client):
                     print 'DispatchClient: exiting'
                     return
                 else:
-                    rec = self.recv_object(ROOT.RAT.DS.PackedRec.Class(), flags=zmq.NOBLOCK)
-                    if rec:
+                    event = self.recv_object(ROOT.RAT.DS.PackedEvent.Class(), flags=zmq.NOBLOCK)
+                    if event:
                         break
 
-            if rec:
-                print 'DispatchClient: received PackedRec of type', rec.RecordType
-                if (rec.RecordType == 1):
-                    event = rec.Rec
-                    event.__class__ = ROOT.RAT.DS.PackedEvent
+            if event:
+                print 'DispatchClient: received Event with nhit', event.NHits
 
-                    pevent = ParsedEvent(event)
+                pevent = ParsedEvent(event)
 
-                    for buf in self.buffers:
-                        if (buf == 'nhit'):
-                            self.buffers[buf].append(int(event.NHits))
-                        elif (buf == 'crateevent'):
-                            self.buffers[buf].append(pevent.crateevents)
-                        elif (buf == 'cardevent'):
-                            self.buffers[buf].append(pevent.cardevents)
-                        elif (buf == 'craterate'):
-                            self.buffers[buf].append([pevent.crateevents, pevent.clockCount10])
+                for buf in self.buffers:
+                    if (buf == 'nhit'):
+                        self.buffers[buf].append(int(event.NHits))
+                    elif (buf == 'crateevent'):
+                        self.buffers[buf].append(pevent.crateevents)
+                    elif (buf == 'cardevent'):
+                        self.buffers[buf].append(pevent.cardevents)
+                    elif (buf == 'craterate'):
+                        self.buffers[buf].append([pevent.crateevents, pevent.clockCount10])
             else:
                 print 'DispatchClient: error deserializing message data'
 
