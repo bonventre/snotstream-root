@@ -51,7 +51,7 @@ Serve static files for the snotstream "home page"
 
 Running snotstream
 ------------------
-`server/snotstream.py` is a runnable WSGI server. Run:
+`bin/snotstream` is a runnable WSGI server. Run:
 
     $ snotstream
 
