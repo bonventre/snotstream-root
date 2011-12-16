@@ -1,8 +1,6 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"> 
-<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en"> 
+<html>
   <head> 
-    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /> 
-    <title>Sno+ Monitoring</title>
+    <title>SNO+ Monitoring</title>
     <script src="js/json2.js"></script>
     <script src="js/jquery-1.7.js"></script> 
     <script src="js/jquery.jqplot.js"></script>
@@ -21,12 +19,12 @@
     <link type="text/css" rel="stylesheet" href="http://fonts.googleapis.com/css?family=Droid+Sans"/> 
     <link rel="shortcut icon" href="images/favicon.ico"/>
     <style>
-      .vmenu{border:1px solid #aaa;position:absolute;background:#fff; display:none;font-size:0.75em;}
-      .vmenu .first_li span{width:100px;display:block;padding:5px 10px;cursor:pointer}
-      .vmenu .inner_li{display:none;margin-left:120px;position:absolute;border:1px solid #aaa;
+      .vmenu {border:1px solid #aaa;position:absolute;background:#fff; display:none;font-size:0.75em;}
+      .vmenu .first_li span {width:100px;display:block;padding:5px 10px;cursor:pointer}
+      .vmenu .inner_li {display:none;margin-left:120px;position:absolute;border:1px solid #aaa;
         border-left:1px solid #ccc;margin-top:-28px;background:#fff;}
-      .vmenu .sep_li{border-top: 1px ridge #aaa;margin:5px 0}
-      .vmenu .fill_title{font-size:11px;font-weight:bold;/height:15px;/overflow:hidden;word-wrap:break-word;}
+      .vmenu .sep_li {border-top: 1px ridge #aaa;margin:5px 0}
+      .vmenu .fill_title {font-size:11px;font-weight:bold;height:15px;overflow:hidden;word-wrap:break-word;}
     </style>
   </head>
 
@@ -34,8 +32,8 @@
     <div id="header"></div>
     <br/>
 
-    <div id="content">
-      <div id="nhitchart" style="margin:50px;height:400px;width:200px;float:left;" class="plot"></div>
+    <div id="chart-template" style="margin:50px;float:left;">
+      <div style="margin:50px;" class="plot"></div>
       <div class="vmenu">
         <div class="first_li"><span>Clear</span></div>
         <div class="sep_li"></div>
@@ -46,56 +44,37 @@
         <div class="sep_li"></div>
         <div class="first_li"><span>Rebin</span></div>
       </div>
-      <div id="crateeventchart" style="margin:50px;height:400px;width:200px;float:left;" class="plot"></div>
-      <div class="vmenu">
-        <div class="first_li"><span>Clear</span></div>
-        <div class="sep_li"></div>
-        <div class="first_li"><span>Stop</span></div>
-        <div class="sep_li"></div>
-        <div class="first_li"><span>Load 5</span></div>
-        <div class="first_li"><span>Load 10</span></div>
-      </div>
-      <div id="cardeventchart" style="margin:50px;height:400px;width:1000px;float:left;" class="plot"></div>
-      <div class="vmenu">
-        <div class="first_li"><span>Clear</span></div>
-        <div class="sep_li"></div>
-        <div class="first_li"><span>Stop</span></div>
-        <div class="sep_li"></div>
-        <div class="first_li"><span>Load 5</span></div>
-        <div class="first_li"><span>Load 10</span></div>
-      </div>
-            <div id="cardeventchart2" style="margin:50px;height:400px;width:1000px;float:left;" class="plot"></div>
-      <div class="vmenu">
-        <div class="first_li"><span>Clear</span></div>
-        <div class="sep_li"></div>
-        <div class="first_li"><span>Stop</span></div>
-        <div class="sep_li"></div>
-        <div class="first_li"><span>Load 5</span></div>
-        <div class="first_li"><span>Load 10</span></div>
-      </div>
-      <div id="cardeventchart3" style="margin:50px;height:400px;width:1000px;float:left;" class="plot"></div>
-      <div class="vmenu">
-        <div class="first_li"><span>Clear</span></div>
-        <div class="sep_li"></div>
-        <div class="first_li"><span>Stop</span></div>
-        <div class="sep_li"></div>
-        <div class="first_li"><span>Load 5</span></div>
-        <div class="first_li"><span>Load 10</span></div>
-      </div>
-
-
-
-
     </div>
+
+    <div id="content">
+    </div>
+
     <div id="footer"></div>
   </body>
 
   <script>
+    var charts = [
+      {name: "chart-nhit", height: "400px", width: "200px"},
+      {name: "chart-crate-event", height: "400px", width: "200px"},
+      {name: "chart-card-event", height: "400px", width: "1000px"},
+    ];
+
     $(document).ready(function() {
+      // load header and footer
       $("#header").load("header.html");
       $("#footer").load("footer.html");
 
-      var nhitplot = new pjs.plot.histogram('nhitchart','nhit',50,0,500,{
+      // add chart divs to dom
+      for (chart in charts) {
+        var new_chart = $("#chart-template").clone();
+        new_chart.attr("id", charts[chart].name);
+        new_chart.css("width", charts[chart].width);
+        new_chart.css("height", charts[chart].height);
+        new_chart.appendTo("#content");
+      }
+
+      // set up charts
+      var nhitplot = new pjs.plot.histogram('chart-nhit','nhit',50,0,500,{
         title: 'Nhit',
         stackSeries:true,
         linesPerBin: false,
@@ -106,8 +85,8 @@
         seriesDefaults:{renderer:$.jqplot.BarRenderer,
           rendererOptions:{
             barMargin: 1
-        },
-        shadow: false},
+          },
+          shadow: false},
         axes:{
           xaxis: {
             tickRenderer: $.jqplot.CanvasAxisTickRenderer,
@@ -125,7 +104,7 @@
         }
       });
 
-      var crateeventplot = new pjs.plot.rateGraph('crateeventchart','craterate',19,0,19,{
+      var crateeventplot = new pjs.plot.rateGraph('chart-crate-event','craterate',19,0,19,{
         title: 'Events per Crate',
         stackSeries:true,
         sumHist: true,
@@ -135,8 +114,8 @@
         seriesDefaults:{renderer:$.jqplot.BarRenderer,
           rendererOptions:{
             barMargin: 1
-        },
-        shadow: false},
+          },
+          shadow: false},
         axes:{
           xaxis: {
             tickRenderer: $.jqplot.CanvasAxisTickRenderer,
@@ -163,7 +142,7 @@
       }
       ticks[303] = [304,' '];
 
-      var cardeventplot = new pjs.plot.barGraph('cardeventchart','cardevent',304,0,304,{
+      var cardeventplot = new pjs.plot.barGraph('chart-card-event','cardevent',304,0,304,{
         title: 'Events per Card',
         stackSeries:true,
         sumHist: true,
@@ -173,8 +152,8 @@
         seriesDefaults:{renderer:$.jqplot.BarRenderer,
           rendererOptions:{
             barMargin: 1
-        },
-        shadow: false},
+          },
+          shadow: false},
         axes:{
           xaxis: {
             ticks: ticks,
@@ -197,17 +176,19 @@
       crateeventplot.draw();
       cardeventplot.draw();
 
-      function update(howmany) {
+      // update a a regular interval
+      // updatePlots sets a timer to call itself
+      function updatePlots() {
         $.ajax({
           async: true,
           url: "./data?nhit=" + nhitplot.lastKey + "&craterate=" + crateeventplot.lastKey
-            + "&cardevent=" + cardeventplot.lastKey,
+          + "&cardevent=" + cardeventplot.lastKey,
           dataType:"json",
           success: function(data){
             nhitplot.update(data);
             crateeventplot.update(data);
             cardeventplot.update(data);
-            t = setTimeout(timer,1);
+            t = setTimeout(updatePlots, 1);
           },
           error: function(jqXHR, textStatus, errorThrown){
             console.log(errorThrown);
@@ -215,14 +196,9 @@
         });
       }
 
-      function timer(howmany){
-        update(howmany);
-      }
+      updatePlots();
 
-
-
-      timer(1);
-
+      // menu ui
       $('.vmenu .first_li').live('click',function(){
         if ($(this).text() == "Stop"){
           $(this).html("<span>Start</span>");
