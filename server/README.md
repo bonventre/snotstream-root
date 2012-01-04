@@ -51,15 +51,15 @@ Serve static files for the snotstream "home page"
 
 Running snotstream
 ------------------
-`server/snotstream.py` is a runnable WSGI server. Run:
+`bin/snotstream` is a runnable WSGI server. Run:
 
-    $ python snotstream.py
+    $ snotstream
 
 and it should be up and running.
 
 Visit the web page (http://localhost/) and you should see... nothing! We need to listen to dispatched data from somewhere. By default, snotstream listens to `localhost:5024`. You can override this with, e.g.,
 
-    $ python snotstream.py tcp://realserver.site.com:1234
+    $ snotstream tcp://realserver.site.com:1234
 
 Actually getting dispatched data is beyond the scope of snotstream, but there are two ways:
 
