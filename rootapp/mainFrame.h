@@ -2,6 +2,7 @@
 #include <TRootEmbeddedCanvas.h> 
 #include <TCanvas.h>
 #include <TThread.h>
+#include <TGMenu.h>
 #include <RQ_OBJECT.h> 
 #include <TH1.h>
 #include <TH2.h>
@@ -18,21 +19,29 @@ class mainFrame {
 
   private: 
     TGMainFrame         *fMain; 
+    TGPopupMenu         *fMenuEdit;
+
     TRootEmbeddedCanvas *fEcanvas[20]; 
     TRootEmbeddedCanvas *fEcanvasrate[20]; 
     TRootEmbeddedCanvas *fEcanvasnhit; 
+    TRootEmbeddedCanvas *fEcanvasnhitrate; 
     TCanvas *fCanvas[20];  
     TCanvas *fCanvasrate[20];  
     TCanvas *fCanvasnhit;  
+    TCanvas *fCanvasnhitrate;
     TH2F *f1[20];
     TH2F *f1rate[20];
     TH1F *f1nhit;
+    TH1F *f1nhitrate;
     double starttime[20];
     double endtime[20];
-    Int_t hits[10000];
+    double nhittime;
+    Int_t nhithits;
+    Int_t hits[10500];
     TThread             *thread;
     TThread             *AvalancheThread;
     Bool_t finished;
+    Bool_t paused;
     CURL *curl;
     int lastkey;
     int currentTab;
@@ -40,7 +49,10 @@ class mainFrame {
     enum menu_identifiers {
       M_FILE_OPEN,
       M_FILE_DRAW_PLOT,
-      M_FILE_EXIT
+      M_FILE_EXIT,
+      M_EDIT_CLEAR_ALL,
+      M_EDIT_PAUSE,
+      M_EDIT_START
     };
 
   public: 

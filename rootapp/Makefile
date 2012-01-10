@@ -1,5 +1,5 @@
 CC			= g++
-CFLAGS  = 
+CFLAGS  = -g 
 LFLAGS  = -L/usr/local/lib -L$(ROOTSYS)/lib -L$(AVALANCHE) -L$(RATROOT)/lib
 INCLUDE = -I$(ROOTSYS)/include -I$(AVALANCHE) -I$(RATROOT)/include
 
