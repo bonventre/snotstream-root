@@ -15,5 +15,5 @@ main:		dict
 	$(CC) -o $@ main.C mainFrame.C dict.C curlstuff.C $(INCLUDE) $(CFLAGS) $(LFLAGS) $(LIBS) `root-config --cflags --glibs` 
 
 dict:
-	rm dict.*
+	rm -f dict.*
 	rootcint dict.C -c mainFrame.h

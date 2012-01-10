@@ -1,5 +1,6 @@
 #include <TGFrame.h> 
 #include <TRootEmbeddedCanvas.h> 
+#include <TCanvas.h>
 #include <TThread.h>
 #include <RQ_OBJECT.h> 
 #include <TH1.h>
@@ -16,13 +17,14 @@ class mainFrame {
 
   private: 
     TGMainFrame         *fMain; 
-    TRootEmbeddedCanvas *fEcanvas; 
+    TRootEmbeddedCanvas *fEcanvas[20]; 
+    TCanvas *fCanvas[20];  
     TThread             *thread;
     TThread             *AvalancheThread;
     Bool_t finished;
     CURL *curl;
     int lastkey;
-    TH1F *f1;
+    TH1F *f1[20];
 
     enum menu_identifiers {
       M_FILE_OPEN,

@@ -7,6 +7,8 @@
 #include <TSystem.h>
 #include <TThread.h>
 #include <TApplication.h>
+#include <TGTableLayout.h>
+#include <TGFrame.h>
 #include <time.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -27,28 +29,33 @@ void mainFrame::DoDraw() {
 
 void *mainFrame::thread_draw(void* arg){
   // Draws function graphics in randomly choosen interval 
-  TCanvas *fCanvas = fEcanvas->GetCanvas();  
 
   int nfills = 250000;
   int upd = 5000;
 
   TThread::Lock();
-  fCanvas->cd(); 
-  f1->Draw(); 
+  for (Int_t i=0;i<20;i++){
+    fCanvas[i]->cd(); 
+    f1[i]->Draw(); 
+  }
   TThread::UnLock();
 //  srand ( time(NULL) );
 
     /* generate secret number: */
 //  Float_t px, py, pz;
-  for (Int_t i = 0; i < nfills; i++) {
+  Int_t i=0;
+  while(1){
+    i++;
+    if (i==upd) i=0;
 //    pz = px*px + py*py;
     //px = i%10000;
 //    px = rand() % 10000;
 //    f1->Fill(px);
     if ((i%upd) == 0) {
-      CURLcode res;
-      res = curl_easy_perform(curl);
-      fCanvas->Modified();
+      //CURLcode res;
+      //res = curl_easy_perform(curl);
+      for (Int_t j=0;j<20;j++)
+        fCanvas[j]->Modified();
       usleep(1000000);
     }
   }
@@ -88,7 +95,8 @@ void *mainFrame::thread_avalanche(void* arg)
       if (rec->RecordType == 1){
         RAT::DS::PackedEvent* event = (RAT::DS::PackedEvent*) rec->Rec;
         printf("Got an event with nhit %u\n",event->NHits);
-        f1->Fill(event->NHits);
+        for (Int_t j=0;j<20;j++)
+          f1[j]->Fill(event->NHits);
       }
     }
     delete rec;
@@ -118,7 +126,11 @@ mainFrame::mainFrame(const TGWindow *p,UInt_t w,UInt_t h) {
     curl_easy_setopt(curl, CURLOPT_NOPROGRESS, 1);
   }
 
-  f1 = new TH1F("f1","This is the Nhit distribution",50,0,1000);
+  for (Int_t i=0;i<20;i++){
+    char tempname[10];
+    sprintf(tempname,"f%02d",i);
+    f1[i] = new TH1F(tempname,"This is the Nhit distribution",512,0,512);
+  }
   AvalancheThread = new TThread("avalanche",(void(*) (void *))&mainFrame::thread_avalanche,(void *)this);
   AvalancheThread->Run();
 
@@ -146,9 +158,20 @@ mainFrame::mainFrame(const TGWindow *p,UInt_t w,UInt_t h) {
   fMenuBar->AddPopup("&Help",fMenuHelp,new TGLayoutHints(kLHintsTop | kLHintsRight) );
   fMain->AddFrame(fMenuBar,new TGLayoutHints(kLHintsTop | kLHintsExpandX));
 
+  TGCompositeFrame *cframe = new TGCompositeFrame(fMain);
+  cframe->SetLayoutManager(new TGTableLayout(cframe,5,4));
+
   // Create canvas widget 
-  fEcanvas = new TRootEmbeddedCanvas("Ecanvas",fMain,200,200); 
-  fMain->AddFrame(fEcanvas, new TGLayoutHints(kLHintsExpandX| kLHintsExpandY, 
+  for (Int_t i=0;i<5;i++){
+    for (Int_t j=0;j<4;j++){
+      char tempname[10];
+      sprintf(tempname,"%02d",i*4+j);
+      fEcanvas[i*4+j] = new TRootEmbeddedCanvas(tempname,cframe,100,100); 
+      cframe->AddFrame(fEcanvas[i*4+j],new TGTableLayoutHints(j,j+1,i,i+1,kLHintsFillX | kLHintsFillY | kLHintsShrinkX | kLHintsShrinkY | kLHintsExpandX | kLHintsExpandY));
+    }
+  }
+
+  fMain->AddFrame(cframe, new TGLayoutHints(kLHintsExpandX| kLHintsExpandY, 
         10,10,10,1));  
 
   // Set a name to the main frame 
@@ -160,13 +183,14 @@ mainFrame::mainFrame(const TGWindow *p,UInt_t w,UInt_t h) {
   // Map main frame 
   fMain->MapWindow(); 
 
-  TCanvas *fCanvas = fEcanvas->GetCanvas();  
+  for (Int_t i=0;i<20;i++)
+    fCanvas[i] = fEcanvas[i]->GetCanvas();  
 
   while (!finished) {
-    if (fCanvas->IsModified()) {
-      printf("Update canvas\n");
-      fCanvas->Update();
-    }
+    for (Int_t i=0;i<20;i++)
+      if (fCanvas[i]->IsModified())
+        fCanvas[i]->Update();
+
     gSystem->ProcessEvents();
     usleep(100);
   }
