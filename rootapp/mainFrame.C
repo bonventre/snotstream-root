@@ -95,8 +95,13 @@ void *mainFrame::thread_avalanche(void* arg)
       if (rec->RecordType == 1){
         RAT::DS::PackedEvent* event = (RAT::DS::PackedEvent*) rec->Rec;
         printf("Got an event with nhit %u\n",event->NHits);
-        for (Int_t j=0;j<20;j++)
-          f1[j]->Fill(event->NHits);
+        for (Int_t i=0;i<event->PMTBundles.size();i++){
+          RAT::DS::PMTBundle bundle = event->PMTBundles[i];
+          int crate = (bundle.Word[0] >> 21) & (((ULong64_t)1 << 5) - 1);
+          int card = (bundle.Word[0] >> 26) & (((ULong64_t)1 << 4) - 1);
+          int chan = (bundle.Word[0] >> 16) & (((ULong64_t)1 << 5) - 1);
+          f1[crate]->Fill(card*32+chan);
+        }
       }
     }
     delete rec;
