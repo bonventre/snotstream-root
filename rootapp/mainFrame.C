@@ -1,6 +1,7 @@
 #include <TGClient.h> 
 #include <TCanvas.h>  
 #include <TH1.h> 
+#include <TH2.h> 
 #include <TRandom.h> 
 #include <TGButton.h> 
 #include <TGMenu.h>
@@ -36,7 +37,7 @@ void *mainFrame::thread_draw(void* arg){
   TThread::Lock();
   for (Int_t i=0;i<20;i++){
     fCanvas[i]->cd(); 
-    f1[i]->Draw(); 
+    f1[i]->Draw("LEGO"); 
   }
   TThread::UnLock();
 //  srand ( time(NULL) );
@@ -100,7 +101,7 @@ void *mainFrame::thread_avalanche(void* arg)
           int crate = (bundle.Word[0] >> 21) & (((ULong64_t)1 << 5) - 1);
           int card = (bundle.Word[0] >> 26) & (((ULong64_t)1 << 4) - 1);
           int chan = (bundle.Word[0] >> 16) & (((ULong64_t)1 << 5) - 1);
-          f1[crate]->Fill(card*32+chan);
+          f1[crate]->Fill(card,chan);
         }
       }
     }
@@ -134,7 +135,7 @@ mainFrame::mainFrame(const TGWindow *p,UInt_t w,UInt_t h) {
   for (Int_t i=0;i<20;i++){
     char tempname[10];
     sprintf(tempname,"f%02d",i);
-    f1[i] = new TH1F(tempname,"This is the Nhit distribution",512,0,512);
+    f1[i] = new TH2F(tempname,"This is the Nhit distribution",16,0,16,32,0,32);
   }
   AvalancheThread = new TThread("avalanche",(void(*) (void *))&mainFrame::thread_avalanche,(void *)this);
   AvalancheThread->Run();

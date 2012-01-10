@@ -4,6 +4,7 @@
 #include <TThread.h>
 #include <RQ_OBJECT.h> 
 #include <TH1.h>
+#include <TH2.h>
 
 #ifndef __CINT__
 #include <curl/curl.h>
@@ -24,7 +25,7 @@ class mainFrame {
     Bool_t finished;
     CURL *curl;
     int lastkey;
-    TH1F *f1[20];
+    TH2F *f1[20];
 
     enum menu_identifiers {
       M_FILE_OPEN,
