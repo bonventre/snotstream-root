@@ -3,23 +3,18 @@
 #include <TCanvas.h>
 #include <TThread.h>
 #include <TGMenu.h>
+#include <TGToolTip.h>
 #include <RQ_OBJECT.h> 
 #include <TH1.h>
 #include <TH2.h>
 
-#ifndef __CINT__
-#include <curl/curl.h>
-#else
-class CURL;
-#endif
-
-
-class mainFrame { 
+class mainFrame : public TGMainFrame { 
   RQ_OBJECT("mainFrame") 
+    ClassDef(mainFrame,1);
 
   private: 
-    TGMainFrame         *fMain; 
     TGPopupMenu         *fMenuEdit;
+    TGToolTip           *fToolTip;
 
     TRootEmbeddedCanvas *fEcanvas[20]; 
     TRootEmbeddedCanvas *fEcanvasrate[20]; 
@@ -42,7 +37,6 @@ class mainFrame {
     TThread             *AvalancheThread;
     Bool_t finished;
     Bool_t paused;
-    CURL *curl;
     int lastkey;
     int currentTab;
 
@@ -64,7 +58,6 @@ class mainFrame {
     void CloseWindow();
     void HandleMenu(Int_t id);
     void DoTab(Int_t id);
-    void curl_write(char *ptr);
-
+    void EventInfo(Int_t event, Int_t px, Int_t py, TObject *selected);
 };
 

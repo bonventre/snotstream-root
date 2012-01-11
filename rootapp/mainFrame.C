@@ -1,3 +1,4 @@
+#include <TGObject.h>
 #include <TGClient.h> 
 #include <TCanvas.h>  
 #include <TH1.h> 
@@ -11,23 +12,20 @@
 #include <TGTableLayout.h>
 #include <TGFrame.h>
 #include <TGTab.h>
+#include <TGToolTip.h>
 #include <time.h>
 #include <stdlib.h>
 #include <stdio.h>
-#include <curl/curl.h>
 #include <jsoncpp/json.h>
 #include <RAT/DS/PackedEvent.hh>
 #include <avalanche.hpp>
 
 #include "mainFrame.h"
-#include "curlstuff.h"
 
 void mainFrame::DoDraw() { 
   if (!thread){
-    printf("before enable\n");
     fMenuEdit->EnableEntry(M_EDIT_PAUSE);
-    printf("after enable\n");
-    thread = new TThread("memberfunction",(void(*) (void *))&mainFrame::thread_draw,(void *)this);
+    thread = new TThread("memberfunction",(TThread::VoidRtnFunc_t) &mainFrame::thread_draw,(void *)this);
     thread->Run();
   }
 }
@@ -64,8 +62,6 @@ void *mainFrame::thread_draw(void* arg){
       //    px = rand() % 10000;
       //    f1->Fill(px);
       if ((i%upd) == 0) {
-        //CURLcode res;
-        //res = curl_easy_perform(curl);
         if (currentTab == 1)
           for (Int_t j=0;j<20;j++)
             fCanvas[j]->Modified();
@@ -141,71 +137,70 @@ void mainFrame::DoTab(Int_t id)
 
 void mainFrame::CloseWindow()
 {
-  if (AvalancheThread){
-    finished = kTRUE;
-    AvalancheThread->Join();
-  }
-  gApplication->Terminate();
+  finished = kTRUE;
 }
 
 void *mainFrame::thread_avalanche(void* arg)
 {
   avalanche::client client("tcp://localhost:5024");
   while(finished == kFALSE){
-      RAT::DS::PackedRec* rec = (RAT::DS::PackedRec*) client.recvObject(RAT::DS::PackedRec::Class());
-      if (rec && paused == kFALSE){
-        if (rec->RecordType == 1){
-          RAT::DS::PackedEvent* event = (RAT::DS::PackedEvent*) rec->Rec;
-          printf("Got an event with nhit %u\n",event->NHits);
-          f1nhit->Fill(event->NHits);
-          unsigned long clock10part1 = event->MTCInfo[0];
-          unsigned long clock10part2 = event->MTCInfo[1] & 0x1FFFF;
-          double seconds = ((clock10part2 << 32) + clock10part1)/10000000.;
-          for (Int_t i=0;i<event->PMTBundles.size();i++){
-            RAT::DS::PMTBundle bundle = event->PMTBundles[i];
-            int crate = (bundle.Word[0] >> 21) & (((ULong64_t)1 << 5) - 1);
-            int card = (bundle.Word[0] >> 26) & (((ULong64_t)1 << 4) - 1);
-            int chan = (bundle.Word[0] >> 16) & (((ULong64_t)1 << 5) - 1);
-            f1[crate]->Fill(card,chan);
-            hits[crate*16*32+card*32+chan]++;
-            if (starttime[crate] == 0)
-              starttime[crate] = seconds;
-            else
-              endtime[crate] = seconds;
-          }
-          if (nhittime == 0)
-            nhittime = seconds;
-          if ((seconds-nhittime) < 1){
-            nhithits += event->NHits;
-          }else{
-            int count = (int) (seconds-nhittime);
-            for (Int_t j=1;j<20;j++){
-              if (j+count > 20)
-                f1nhitrate->SetBinContent(j,0);
-              else{
-                double bc = f1nhitrate->GetBinContent(j+count+1);
-                f1nhitrate->SetBinContent(j+1,bc);
-              }
-            }
-            f1nhitrate->SetBinContent(20,nhithits);
-            nhittime += count;
-            nhithits = event->NHits;
-          }
-
+    RAT::DS::PackedRec* rec = (RAT::DS::PackedRec*) client.recvObject(RAT::DS::PackedRec::Class(),ZMQ_NOBLOCK);
+    if (rec && paused == kFALSE){
+      if (rec->RecordType == 1){
+        RAT::DS::PackedEvent* event = (RAT::DS::PackedEvent*) rec->Rec;
+        printf("Got an event with nhit %u\n",event->NHits);
+        f1nhit->Fill(event->NHits);
+        unsigned long clock10part1 = event->MTCInfo[0];
+        unsigned long clock10part2 = event->MTCInfo[1] & 0x1FFFF;
+        double seconds = ((clock10part2 << 32) + clock10part1)/10000000.;
+        for (Int_t i=0;i<event->PMTBundles.size();i++){
+          RAT::DS::PMTBundle bundle = event->PMTBundles[i];
+          int crate = (bundle.Word[0] >> 21) & (((ULong64_t)1 << 5) - 1);
+          int card = (bundle.Word[0] >> 26) & (((ULong64_t)1 << 4) - 1);
+          int chan = (bundle.Word[0] >> 16) & (((ULong64_t)1 << 5) - 1);
+          f1[crate]->Fill(card,chan);
+          hits[crate*16*32+card*32+chan]++;
+          if (starttime[crate] == 0)
+            starttime[crate] = seconds;
+          else
+            endtime[crate] = seconds;
         }
+        if (nhittime == 0)
+          nhittime = seconds;
+        if ((seconds-nhittime) < 1){
+          nhithits += event->NHits;
+        }else{
+          int count = (int) (seconds-nhittime);
+          for (Int_t j=1;j<20;j++){
+            if (j+count > 20)
+              f1nhitrate->SetBinContent(j,0);
+            else{
+              double bc = f1nhitrate->GetBinContent(j+count+1);
+              f1nhitrate->SetBinContent(j+1,bc);
+            }
+          }
+          f1nhitrate->SetBinContent(20,nhithits);
+          nhittime += count;
+          nhithits = event->NHits;
+        }
+
       }
-      delete rec;
     }
+    delete rec;
+  }
+  printf("Exiting avalanche\n");
   return 0;
 }
 
-void mainFrame::curl_write(char *ptr)
+void mainFrame::EventInfo(Int_t event, Int_t px, Int_t py, TObject *selected)
 {
-  printf("got back '%s'\n",ptr);
-  Json::Value root;   // will contains the root value after parsing.
-  Json::Reader reader;
-  reader.parse(ptr,root);
-  std::cout << root.get("nhit","TEST").toStyledString();
+  fToolTip->Hide();
+  if (selected == 0 || event != kMouseMotion)
+    return;
+  TString tipInfo = TString::Format("Hi im a tooltip at %d %d on %s",px,py,selected->GetTitle());
+  fToolTip->SetText(tipInfo.Data());
+  fToolTip->SetPosition(px+15,py+15);
+  fToolTip->Reset();
 }
 
 mainFrame::mainFrame(const TGWindow *p,UInt_t w,UInt_t h) { 
@@ -214,14 +209,6 @@ mainFrame::mainFrame(const TGWindow *p,UInt_t w,UInt_t h) {
   lastkey = -1;
   currentTab = 0;
   paused = kFALSE;
-
-  curl = curl_easy_init();
-  if(curl) {
-    curl_easy_setopt(curl, CURLOPT_URL, "http://nutau.hep.upenn.edu:8051/data?nhit=-1");
-    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, &curl_write_func);
-    curl_easy_setopt(curl, CURLOPT_WRITEDATA, this);
-    curl_easy_setopt(curl, CURLOPT_NOPROGRESS, 1);
-  }
 
   for (Int_t i=0;i<20;i++){
     char tempname[10];
@@ -242,15 +229,14 @@ mainFrame::mainFrame(const TGWindow *p,UInt_t w,UInt_t h) {
 
 
 
-  AvalancheThread = new TThread("avalanche",(void(*) (void *))&mainFrame::thread_avalanche,(void *)this);
+  AvalancheThread = new TThread("avalanche",(void* (*) (void *))&mainFrame::thread_avalanche,(void *)this);
   AvalancheThread->Run();
 
 
   // Create a main frame 
-  fMain = new TGMainFrame(p,w,h); 
 
   // create a menu widget
-  TGMenuBar *fMenuBar = new TGMenuBar(fMain,100,20,kHorizontalFrame);
+  TGMenuBar *fMenuBar = new TGMenuBar(this,100,20,kHorizontalFrame);
 
   TGPopupMenu *fMenuFile = new TGPopupMenu(gClient->GetRoot());
   fMenuFile->AddEntry("&Open",M_FILE_OPEN);
@@ -273,9 +259,9 @@ mainFrame::mainFrame(const TGWindow *p,UInt_t w,UInt_t h) {
   TGPopupMenu *fMenuHelp = new TGPopupMenu(gClient->GetRoot());
   fMenuHelp->AddEntry("&About",1);
   fMenuBar->AddPopup("&Help",fMenuHelp,new TGLayoutHints(kLHintsTop | kLHintsRight) );
-  fMain->AddFrame(fMenuBar,new TGLayoutHints(kLHintsTop | kLHintsExpandX));
+  this->AddFrame(fMenuBar,new TGLayoutHints(kLHintsTop | kLHintsExpandX));
 
-  TGTab *tabframe = new TGTab(fMain,100,100);
+  TGTab *tabframe = new TGTab(this,100,100);
   tabframe->Connect("Selected(Int_t)", "mainFrame",this,"DoTab(Int_t)");
 
   TGCompositeFrame *cframe2 = tabframe->AddTab("NHit");
@@ -311,23 +297,25 @@ mainFrame::mainFrame(const TGWindow *p,UInt_t w,UInt_t h) {
 
 
 
-  fMain->AddFrame(tabframe, new TGLayoutHints(kLHintsExpandX| kLHintsExpandY, 
+  this->AddFrame(tabframe, new TGLayoutHints(kLHintsExpandX| kLHintsExpandY, 
         10,10,10,1));  
 
   // Set a name to the main frame 
-  fMain->SetWindowName("Simple Example"); 
+  this->SetWindowName("Simple Example"); 
   // Map all subwindows of main frame 
-  fMain->MapSubwindows(); 
+  this->MapSubwindows(); 
   // Initialize the layout algorithm 
-  fMain->Resize(fMain->GetDefaultSize()); 
+  this->Resize(this->GetDefaultSize()); 
   // Map main frame 
-  fMain->MapWindow(); 
+  this->MapWindow(); 
 
   for (Int_t i=0;i<20;i++){
     fCanvas[i] = fEcanvas[i]->GetCanvas();  
     fCanvasrate[i] = fEcanvasrate[i]->GetCanvas();  
   }
   fCanvasnhit = fEcanvasnhit->GetCanvas();
+  fToolTip = new TGToolTip(fClient->GetDefaultRoot(),fEcanvasnhit,"",250);
+  fCanvasnhit->Connect("ProcessedEvent(Int_t,Int_t,Int_t,TObject*)","mainFrame",this,"EventInfo(Int_t,Int_t,Int_t,TObject*)");
   fCanvasnhitrate = fEcanvasnhitrate->GetCanvas();
 
   while (!finished) {
@@ -345,13 +333,32 @@ mainFrame::mainFrame(const TGWindow *p,UInt_t w,UInt_t h) {
     gSystem->ProcessEvents();
     usleep(100);
   }
+
+  if (AvalancheThread){
+    AvalancheThread->Join();
+    if (thread)
+      thread->Join();
+  }
+  gApplication->Terminate();
 }
 
 mainFrame::~mainFrame() { 
   // Clean up used widgets: frames, buttons, layouthints 
-  fMain->Cleanup(); 
-  curl_easy_cleanup(curl);
-  delete fMain; 
+  this->Cleanup(); 
+  delete fToolTip;
+  delete fMenuEdit;
+  for (Int_t i=0;i<20;i++){
+    delete fEcanvas[i];
+    delete f1[i];
+    delete f1rate[i];
+  }
+  delete fEcanvasnhit;
+  delete fEcanvasnhitrate;
+  delete f1nhit;
+  delete f1nhitrate;
+  delete thread;
+  delete AvalancheThread;
+
 }
 
 
