@@ -59,5 +59,6 @@ class mainFrame : public TGMainFrame {
     void HandleMenu(Int_t id);
     void DoTab(Int_t id);
     void EventInfo(Int_t event, Int_t px, Int_t py, TObject *selected);
+    virtual Int_t DistancetoPrimitive(Int_t px, Int_t py);
 };
 

@@ -195,12 +195,37 @@ void *mainFrame::thread_avalanche(void* arg)
 void mainFrame::EventInfo(Int_t event, Int_t px, Int_t py, TObject *selected)
 {
   fToolTip->Hide();
-  if (selected == 0 || event != kMouseMotion)
+  if (selected == 0 || event != kMouseMotion || (strcmp(selected->ClassName(),"TH1F") != 0 && strcmp(selected->ClassName(),"TH2F") != 0))
     return;
-  TString tipInfo = TString::Format("Hi im a tooltip at %d %d on %s",px,py,selected->GetTitle());
+  TString tipInfo;
+  TString objInfo = selected->GetObjectInfo(px, py);
+  if (objInfo.BeginsWith("-")) {
+    // if the string begins with '-', display only the object info
+    objInfo.Remove(TString::kLeading, '-');
+    tipInfo = objInfo;
+  }
+  else {
+    const char *title = selected->GetTitle();
+    tipInfo += TString::Format("%s::%s", selected->ClassName(),
+        selected->GetName());
+    if (title && strlen(title))
+      tipInfo += TString::Format("\n%s", selected->GetTitle());
+    tipInfo += TString::Format("\n%d, %d", px, py);
+    if (!objInfo.IsNull())
+      tipInfo += TString::Format("\n%s", objInfo.Data());
+  }
   fToolTip->SetText(tipInfo.Data());
-  fToolTip->SetPosition(px+15,py+15);
+  fToolTip->SetPosition(px+15, py+15);
   fToolTip->Reset();
+}
+
+Int_t mainFrame::DistancetoPrimitive(Int_t px, Int_t py)
+{
+  printf("hi %d %d\n",px,py);
+  if (f1nhit->DistancetoPrimitive(px,py) < 5){
+    printf("hello\n");
+  }
+  return 0;
 }
 
 mainFrame::mainFrame(const TGWindow *p,UInt_t w,UInt_t h) { 
