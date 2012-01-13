@@ -82,6 +82,29 @@ class Hist2dPlot : public Plot {
     void Fill(Double_t x, Double_t y);
 };
 
+class RatePlot : public Plot {
+  RQ_OBJECT("RatePlot") 
+
+  private:
+    TH1F                *fHist; 
+
+    Int_t               fXbins;
+    Double_t            fStartTime;
+    Double_t            fCurrentTime;
+//    std::vector<Double_t> fCounts;
+    Double_t            fCounts[512];
+
+  public:
+    RatePlot(void* app, const char* name, const char* title, Int_t nbinsx, Double_t xlow, Double_t xup);
+    ~RatePlot();
+
+    void Fill(Double_t x, Double_t t);
+    void Draw(const char* option = "");
+    void Modified();
+    void SetBinLabels(char ticks[][30]);
+};
+
+
 class Rate2dPlot : public Plot {
   RQ_OBJECT("Rate2dPlot") 
 
@@ -102,20 +125,6 @@ class Rate2dPlot : public Plot {
     void Fill(Double_t x, Double_t y, Double_t t);
     void Draw(const char* option);
     void Modified();
-};
-
-class BarPlot : public Plot {
-  RQ_OBJECT("BarPlot")
-
-  public:
-    BarPlot(void* app, const char* name, const char* title, Int_t nbinsx, const char ticks[][30]);
-    ~BarPlot();
-
-    void Draw();
-    void Fill(Double_t x);
-
-  private:
-    TH1F              *fHist;
 };
 
 #endif

@@ -54,7 +54,7 @@ RootApp::RootApp(const TGWindow *p,UInt_t w,UInt_t h) : TGMainFrame(p,w,h) {
   char triggernames[9][30] = {"N100L","N100M","N100H","N20","N20L","ESUML","ESUMH","PulseGT","PreScale"};
   fTrigCount = new HistPlot(this,"Trigger Counts","Trigger Counts",9,0,9);
   fTrigCount->SetBinLabels(triggernames);
-  fTrigRate  = new HistPlot(this,"Trigger Rates","Trigger Rates",9,0,9);
+  fTrigRate  = new RatePlot(this,"Trigger Rates","Trigger Rates",9,0,9);
   fTrigRate->SetBinLabels(triggernames);
 
   fDispatchThread = new TThread("dispatch",(void* (*) (void *)) &RootApp::DispatchThread,(void*) this);
@@ -401,15 +401,15 @@ void *RootApp::DispatchThread(void* arg)
           if ((0x1<<i) & trigtype){
             if (i<7){
             fTrigCount->Fill(i);
-            fTrigRate->Fill(i);
+            fTrigRate->Fill(i,seconds);
             }
             if (i==10){
               fTrigCount->Fill(7);
-              fTrigRate->Fill(7);
+              fTrigRate->Fill(7,seconds);
             }
             if (i==11){
               fTrigCount->Fill(8);
-              fTrigRate->Fill(8);
+              fTrigRate->Fill(8,seconds);
             }
           }
         }

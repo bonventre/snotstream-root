@@ -65,7 +65,7 @@ class RootApp : public TGMainFrame {
     TimeRatePlot        *fCrateRate[20];
     HistPlot            *fCrateNhit[20];
     HistPlot            *fTrigCount;
-    HistPlot            *fTrigRate;
+    RatePlot            *fTrigRate;
 
 
 };

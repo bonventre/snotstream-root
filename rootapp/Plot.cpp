@@ -158,6 +158,58 @@ void Hist2dPlot::Fill(Double_t x,Double_t y)
     fHist->Fill(x,y);
 }
 
+RatePlot::RatePlot(void* app, const char* name, const char* title, Int_t nbinsx, Double_t xlow, Double_t xup)
+  : Plot(app)
+{
+  fHist = new TH1F(name,title,nbinsx,xlow,xup);
+  fStartTime = 0;
+  fCurrentTime = 0;
+  fXbins = nbinsx;
+  for (Int_t i=0;i<512;i++)
+    fCounts[i] = 0;
+}
+
+RatePlot::~RatePlot()
+{
+  delete fHist;
+}
+
+void RatePlot::Draw(const char* option)
+{
+  fCanvas->cd();
+  fHist->Draw(option);
+}
+
+void RatePlot::Modified()
+{
+  if (fCurrentTime > 0){
+    double elapsed = fCurrentTime-fStartTime;
+    for (Int_t i=0;i<fXbins;i++){
+      fHist->SetBinContent(i+1,(fCounts[i]/elapsed));
+    }
+  }
+  fCanvas->Modified();
+}
+
+void RatePlot::Fill(Double_t x, Double_t t)
+{
+  if (fPaused == kFALSE){
+    fCounts[(int)x]++;
+    if (fStartTime == 0)
+      fStartTime = t;
+    else
+      fCurrentTime = t;
+  }
+}
+
+void RatePlot::SetBinLabels(char ticks[][30])
+{
+  for (Int_t i=0;i<fXbins;i++){
+    fHist->GetXaxis()->SetBinLabel(i+1,ticks[i]);
+  }
+}
+
+
 Rate2dPlot::Rate2dPlot(void* app, const char* name, const char* title, Int_t nbinsx, Double_t xlow, Double_t xup, Int_t nbinsy, Double_t ylow, Double_t yup)
   : Plot(app)
 {
@@ -204,32 +256,3 @@ void Rate2dPlot::Fill(Double_t x, Double_t y, Double_t t)
       fCurrentTime = t;
   }
 }
-
-BarPlot::BarPlot(void* app, const char* name, const char* title, Int_t nbinsx, const char ticks[][30])
-  : Plot(app)
-{
-  fHist = new TH1F(name,title,nbinsx,0,nbinsx);
-  fHist->SetMinimum(0);
-  for (Int_t i=0;i<nbinsx;i++){
-    fHist->GetXaxis()->SetBinLabel(i+1,ticks[i]);
-  }
-}
-
-BarPlot::~BarPlot()
-{
-  delete fHist;
-}
-
-void BarPlot::Draw()
-{
-  fCanvas->cd();
-  fHist->Draw();
-}
-
-void BarPlot::Fill(Double_t x)
-{
-  if (fPaused == kFALSE)
-    fHist->Fill(x);
-}
-
-
