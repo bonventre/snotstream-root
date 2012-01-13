@@ -39,21 +39,28 @@ RootApp::RootApp(const TGWindow *p,UInt_t w,UInt_t h) : TGMainFrame(p,w,h) {
   for (Int_t i=0;i<20;i++){
     char tempname[10];
     sprintf(tempname,"Crate %02d CC hits",i);
-    fCCCHits[i] = new Hist2dPlot(tempname,"Hits per channel",16,0,16,32,0,32);
+    fCCCHits[i] = new Hist2dPlot(this,tempname,"Hits per channel",16,0,16,32,0,32);
     sprintf(tempname,"Crate %02d CC rate",i);
-    fCCCRate[i] = new Rate2dPlot(tempname,"Hit Rate (hits/s) per channel",16,0,16,32,0,32);
+    fCCCRate[i] = new Rate2dPlot(this,tempname,"Hit Rate (hits/s) per channel",16,0,16,32,0,32);
     sprintf(tempname,"Crate %02d hits",i);
-    fCrateHits[i] = new HistPlot(tempname,"Hits per channel",512,0,512);
+    fCrateHits[i] = new HistPlot(this,tempname,"Hits per channel",512,0,512);
     sprintf(tempname,"Crate %02d rate",i);
-    fCrateRate[i] = new TimeRatePlot(tempname,"Scrolling average hit rate (hits/s)",20,-20,0);
+    fCrateRate[i] = new TimeRatePlot(this,tempname,"Scrolling average hit rate (hits/s)",20,-20,0);
     sprintf(tempname,"Crate %02d NHit",i);
-    fCrateNhit[i] = new HistPlot(tempname,"Nhit",20,0,40);
+    fCrateNhit[i] = new HistPlot(this,tempname,"Nhit",20,0,40);
   }
-  fNhit = new HistPlot("Nhit","Nhit",20,0,400);
-  fNhitRate = new TimeRatePlot("Nhit rate","Scrolling average total hit rate (hits/s)",20,-20,0);
+  fNhit = new HistPlot(this,"Nhit","Nhit",20,0,400);
+  fNhitRate = new TimeRatePlot(this,"Nhit rate","Scrolling average total hit rate (hits/s)",20,-20,0);
+  char triggernames[9][30] = {"N100L","N100M","N100H","N20","N20L","ESUML","ESUMH","PulseGT","PreScale"};
+  fTrigCount = new HistPlot(this,"Trigger Counts","Trigger Counts",9,0,9);
+  fTrigCount->SetBinLabels(triggernames);
+  fTrigRate  = new HistPlot(this,"Trigger Rates","Trigger Rates",9,0,9);
+  fTrigRate->SetBinLabels(triggernames);
 
   fDispatchThread = new TThread("dispatch",(void* (*) (void *)) &RootApp::DispatchThread,(void*) this);
   fDispatchThread->Run();
+
+  fToolTip = new TGToolTip(fClient->GetDefaultRoot(),fMainFrame,"",250);
 
   fMainFrame = new TGVerticalFrame(this,100,100);
   AddFrame(fMainFrame, new TGLayoutHints(kLHintsExpandX| kLHintsExpandY,0,0,0,0));  
@@ -70,9 +77,6 @@ RootApp::RootApp(const TGWindow *p,UInt_t w,UInt_t h) : TGMainFrame(p,w,h) {
   // Map main frame 
   MapWindow(); 
 
-  //fToolTip = new TGToolTip(fClient->GetDefaultRoot(),fEcanvasnhit,"",250);
-  //fCanvasnhit->Connect("ProcessedEvent(Int_t,Int_t,Int_t,TObject*)","mainFrame",this,"EventInfo(Int_t,Int_t,Int_t,TObject*)");
-
   while (!fFinished) {
     for (Int_t i=0;i<20;i++){
       fCCCHits[i]->Update();
@@ -83,6 +87,8 @@ RootApp::RootApp(const TGWindow *p,UInt_t w,UInt_t h) : TGMainFrame(p,w,h) {
     }
     fNhit->Update();
     fNhitRate->Update();
+    fTrigCount->Update();
+    fTrigRate->Update();
 
     gSystem->ProcessEvents();
     usleep(100);
@@ -210,6 +216,13 @@ void RootApp::SetupTabs()
     fCrateNhit[i]->SetECanvas(fCrateNhit[0]->GetECanvas());
   }
 
+  fTab5 = fDisplayFrame->AddTab("Triggers");
+  fTab5->SetLayoutManager(new TGTableLayout(fTab5,2,1));
+  fTrigCount->CreateECanvas("trigcounts",fTab5,100,100);
+  fTab5->AddFrame(fTrigCount->GetECanvas(),new TGTableLayoutHints(0,1,0,1,kLHintsFillX | kLHintsFillY | kLHintsShrinkX | kLHintsShrinkY | kLHintsExpandX | kLHintsExpandY));
+  fTrigRate->CreateECanvas("trigcounts",fTab5,100,100);
+  fTab5->AddFrame(fTrigRate->GetECanvas(),new TGTableLayoutHints(0,1,1,2,kLHintsFillX | kLHintsFillY | kLHintsShrinkX | kLHintsShrinkY | kLHintsExpandX | kLHintsExpandY));
+
   fMainFrame->AddFrame(fDisplayFrame, new TGLayoutHints(kLHintsExpandX| kLHintsExpandY, 
         10,10,10,1));  
 }
@@ -281,7 +294,6 @@ void RootApp::HandleMenu(Int_t id)
 
 void RootApp::EventInfo(Int_t event, Int_t px, Int_t py, TObject *selected)
 {
-  /*
   fToolTip->Hide();
   if (selected == 0 || event != kMouseMotion || (strcmp(selected->ClassName(),"TH1F") != 0 && strcmp(selected->ClassName(),"TH2F") != 0))
     return;
@@ -305,7 +317,6 @@ void RootApp::EventInfo(Int_t event, Int_t px, Int_t py, TObject *selected)
   fToolTip->SetText(tipInfo.Data());
   fToolTip->SetPosition(px+15, py+15);
   fToolTip->Reset();
-  */
 }
 
 
@@ -332,29 +343,41 @@ void *RootApp::DrawThread(void* arg)
   fCrateHits[0]->Draw();
   fCrateRate[0]->Draw();
   fCrateNhit[0]->Draw();
+  fTrigCount->Draw();
+  fTrigRate->Draw();
   TThread::UnLock();
 
   Int_t i=0;
   while(IsFinished() == kFALSE){
-    //if (paused == kFALSE){
       i++;
       if (i==upd) i=0;
       if ((i%upd) == 0) {
-        if (GetCurrentTab() == 1)
-          for (Int_t j=0;j<20;j++)
-            fCCCHits[j]->Modified();
-        if (GetCurrentTab() == 0){
-          fNhit->Modified();
-          fNhitRate->Modified();
-        }
-        if (GetCurrentTab() == 2){
-          for (Int_t j=0;j<20;j++){
-            fCCCRate[j]->Modified();
-          }
+        switch(GetCurrentTab()){
+          case 0:
+            fNhit->Modified();
+            fNhitRate->Modified();
+            break;
+          case 1: 
+            for (Int_t j=0;j<20;j++)
+              fCCCHits[j]->Modified();
+            break;
+          case 2:
+            for (Int_t j=0;j<20;j++){
+              fCCCRate[j]->Modified();
+            }
+            break;
+          case 3:
+            fCrateHits[fCurrentCrate]->Modified();
+            fCrateRate[fCurrentCrate]->Modified();
+            fCrateNhit[fCurrentCrate]->Modified();
+            break;
+          case 4:
+            fTrigCount->Modified();
+            fTrigRate->Modified();
+          break;
         }
         usleep(1000000);
       }
-    //}
   }
   printf("Draw thread exiting\n");
   return 0;
@@ -372,8 +395,26 @@ void *RootApp::DispatchThread(void* arg)
         unsigned long clock10part1 = event->MTCInfo[0];
         unsigned long clock10part2 = event->MTCInfo[1] & 0x1FFFF;
         double seconds = ((clock10part2 << 32) + clock10part1)/10000000.;
+        unsigned long trigtype = ((event->MTCInfo[3] & 0xFF000000)>>24) | ((event->MTCInfo[4] & 0x0003FFFF) << 8);
 
-        printf("Got an event with nhit %u at time %f\n",event->NHits,seconds);
+        for (Int_t i=0;i<26;i++){
+          if ((0x1<<i) & trigtype){
+            if (i<7){
+            fTrigCount->Fill(i);
+            fTrigRate->Fill(i);
+            }
+            if (i==10){
+              fTrigCount->Fill(7);
+              fTrigRate->Fill(7);
+            }
+            if (i==11){
+              fTrigCount->Fill(8);
+              fTrigRate->Fill(8);
+            }
+          }
+        }
+
+        printf("Got an event with nhit %u at time %f with mask %08x\n",event->NHits,seconds,trigtype);
         fNhit->Fill(event->NHits);
         fNhitRate->Fill(event->NHits,seconds);
 

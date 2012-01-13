@@ -5,9 +5,10 @@
 
 #include "Plot.h"
 
-Plot::Plot()
+Plot::Plot(void* app)
 {
   fPaused = kFALSE;
+  fApp = app;
 }
 
 Plot::~Plot()
@@ -19,12 +20,14 @@ void Plot::CreateECanvas(const char* name, const TGWindow* p, UInt_t w, UInt_t h
 {
   fECanvas = new TRootEmbeddedCanvas(name,p,w,h);
   fCanvas = fECanvas->GetCanvas();
+  fCanvas->Connect("ProcessedEvent(Int_t,Int_t,Int_t,TObject*)","RootApp",fApp,"EventInfo(Int_t,Int_t,Int_t,TObject*)");
 }
 
 void Plot::SetECanvas(TRootEmbeddedCanvas *ECanvas)
 {
   fECanvas = ECanvas;
   fCanvas = fECanvas->GetCanvas();
+  fCanvas->Connect("ProcessedEvent(Int_t,Int_t,Int_t,TObject*)","RootApp",fApp,"EventInfo(Int_t,Int_t,Int_t,TObject*)");
 }
 
 TRootEmbeddedCanvas *Plot::GetECanvas()
@@ -40,11 +43,6 @@ void Plot::Update()
 
 void Plot::Clear(){}
 
-HistPlot::HistPlot(const char* name, const char* title, Int_t nbinsx, Double_t xlow, Double_t xup)
-{
-  fHist = new TH1F(name,title,nbinsx,xlow,xup);
-}
-
 void Plot::Modified()
 {
   fCanvas->Modified();
@@ -58,6 +56,13 @@ void Plot::Pause()
 void Plot::UnPause()
 {
   fPaused = kFALSE;
+}
+
+HistPlot::HistPlot(void* app, const char* name, const char* title, Int_t nbinsx, Double_t xlow, Double_t xup)
+  : Plot(app)
+{
+  fHist = new TH1F(name,title,nbinsx,xlow,xup);
+  fXbins = nbinsx;
 }
 
 HistPlot::~HistPlot()
@@ -77,7 +82,15 @@ void HistPlot::Fill(Double_t x)
     fHist->Fill(x);
 }
 
-TimeRatePlot::TimeRatePlot(const char* name, const char* title, Int_t nbinsx, Double_t xlow, Double_t xup)
+void HistPlot::SetBinLabels(char ticks[][30])
+{
+  for (Int_t i=0;i<fXbins;i++){
+    fHist->GetXaxis()->SetBinLabel(i+1,ticks[i]);
+  }
+}
+
+TimeRatePlot::TimeRatePlot(void* app, const char* name, const char* title, Int_t nbinsx, Double_t xlow, Double_t xup)
+  : Plot(app)
 {
   fHist = new TH1F(name,title,nbinsx,xlow,xup);
   fFirstBinTime = 0;
@@ -121,7 +134,8 @@ void TimeRatePlot::Fill(Double_t counts, Double_t t)
   }
 }
 
-Hist2dPlot::Hist2dPlot(const char* name, const char* title, Int_t nbinsx, Double_t xlow, Double_t xup, Int_t nbinsy, Double_t ylow, Double_t yup)
+Hist2dPlot::Hist2dPlot(void* app, const char* name, const char* title, Int_t nbinsx, Double_t xlow, Double_t xup, Int_t nbinsy, Double_t ylow, Double_t yup)
+  : Plot(app)
 {
   fHist = new TH2F(name,title,nbinsx,xlow,xup,nbinsy,ylow,yup);
   printf("made at %p\n",fHist);
@@ -144,7 +158,8 @@ void Hist2dPlot::Fill(Double_t x,Double_t y)
     fHist->Fill(x,y);
 }
 
-Rate2dPlot::Rate2dPlot(const char* name, const char* title, Int_t nbinsx, Double_t xlow, Double_t xup, Int_t nbinsy, Double_t ylow, Double_t yup)
+Rate2dPlot::Rate2dPlot(void* app, const char* name, const char* title, Int_t nbinsx, Double_t xlow, Double_t xup, Int_t nbinsy, Double_t ylow, Double_t yup)
+  : Plot(app)
 {
   fHist = new TH2F(name,title,nbinsx,xlow,xup,nbinsy,ylow,yup);
   fStartTime = 0;
@@ -189,3 +204,32 @@ void Rate2dPlot::Fill(Double_t x, Double_t y, Double_t t)
       fCurrentTime = t;
   }
 }
+
+BarPlot::BarPlot(void* app, const char* name, const char* title, Int_t nbinsx, const char ticks[][30])
+  : Plot(app)
+{
+  fHist = new TH1F(name,title,nbinsx,0,nbinsx);
+  fHist->SetMinimum(0);
+  for (Int_t i=0;i<nbinsx;i++){
+    fHist->GetXaxis()->SetBinLabel(i+1,ticks[i]);
+  }
+}
+
+BarPlot::~BarPlot()
+{
+  delete fHist;
+}
+
+void BarPlot::Draw()
+{
+  fCanvas->cd();
+  fHist->Draw();
+}
+
+void BarPlot::Fill(Double_t x)
+{
+  if (fPaused == kFALSE)
+    fHist->Fill(x);
+}
+
+

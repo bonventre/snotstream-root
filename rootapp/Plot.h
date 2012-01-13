@@ -15,11 +15,13 @@ class Plot {
   protected:
     Bool_t              fPaused;
 
+    void                *fApp;
+
     TRootEmbeddedCanvas *fECanvas;
     TCanvas             *fCanvas;
 
   public:
-    Plot();
+    Plot(void* app);
     ~Plot();
 
     void CreateECanvas(const char* name = 0, const TGWindow* p = 0, UInt_t w = 10, UInt_t h = 10);
@@ -37,13 +39,15 @@ class HistPlot : public Plot {
 
   private:
     TH1F                *fHist; 
+    Int_t               fXbins;
 
   public:
-    HistPlot(const char* name, const char* title, Int_t nbinsx, Double_t xlow, Double_t xup);
+    HistPlot(void* app, const char* name, const char* title, Int_t nbinsx, Double_t xlow, Double_t xup);
     ~HistPlot();
 
     void Draw();
     void Fill(Double_t x);
+    void SetBinLabels(char ticks[][30]);
 };
 
 class TimeRatePlot : public Plot {
@@ -57,7 +61,7 @@ class TimeRatePlot : public Plot {
     Int_t               fXbins;
 
   public:
-    TimeRatePlot(const char* name, const char* title, Int_t nbinsx, Double_t xlow, Double_t xup);
+    TimeRatePlot(void* app, const char* name, const char* title, Int_t nbinsx, Double_t xlow, Double_t xup);
     ~TimeRatePlot();
 
     void Draw();
@@ -71,7 +75,7 @@ class Hist2dPlot : public Plot {
     TH2F                *fHist; 
 
   public:
-    Hist2dPlot(const char* name, const char* title, Int_t nbinsx, Double_t xlow, Double_t xup, Int_t nbinsy, Double_t ylow, Double_t yup);
+    Hist2dPlot(void* app, const char* name, const char* title, Int_t nbinsx, Double_t xlow, Double_t xup, Int_t nbinsy, Double_t ylow, Double_t yup);
     ~Hist2dPlot();
 
     void Draw(const char* option);
@@ -92,12 +96,26 @@ class Rate2dPlot : public Plot {
     Double_t            fCounts[512];
 
   public:
-    Rate2dPlot(const char* name, const char* title, Int_t nbinsx, Double_t xlow, Double_t xup, Int_t nbinsy, Double_t ylow, Double_t yup);
+    Rate2dPlot(void* app, const char* name, const char* title, Int_t nbinsx, Double_t xlow, Double_t xup, Int_t nbinsy, Double_t ylow, Double_t yup);
     ~Rate2dPlot();
 
     void Fill(Double_t x, Double_t y, Double_t t);
     void Draw(const char* option);
     void Modified();
+};
+
+class BarPlot : public Plot {
+  RQ_OBJECT("BarPlot")
+
+  public:
+    BarPlot(void* app, const char* name, const char* title, Int_t nbinsx, const char ticks[][30]);
+    ~BarPlot();
+
+    void Draw();
+    void Fill(Double_t x);
+
+  private:
+    TH1F              *fHist;
 };
 
 #endif

@@ -30,6 +30,7 @@ class RootApp : public TGMainFrame {
     TGCompositeFrame    *fTab2;
     TGCompositeFrame    *fTab3;
     TGCompositeFrame    *fTab4;
+    TGCompositeFrame    *fTab5;
 
     TThread             *fDrawThread;
     TThread             *fDispatchThread;
@@ -63,6 +64,8 @@ class RootApp : public TGMainFrame {
     HistPlot            *fCrateHits[20];
     TimeRatePlot        *fCrateRate[20];
     HistPlot            *fCrateNhit[20];
+    HistPlot            *fTrigCount;
+    HistPlot            *fTrigRate;
 
 
 };
