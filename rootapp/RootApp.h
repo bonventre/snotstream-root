@@ -20,19 +20,22 @@ class RootApp : public TGMainFrame {
     TGMenuBar           *fMenuBar;
     TGPopupMenu         *fMenuFile;
     TGPopupMenu         *fMenuEdit;
+    TGPopupMenu         *fMenuCrate;
     TGPopupMenu         *fMenuHelp;
     TGToolTip           *fToolTip;
 
     TGCompositeFrame    *fMainFrame;
     TGTab               *fDisplayFrame;
-    TGCompositeFrame     *fTab1;
+    TGCompositeFrame    *fTab1;
     TGCompositeFrame    *fTab2;
     TGCompositeFrame    *fTab3;
+    TGCompositeFrame    *fTab4;
 
     TThread             *fDrawThread;
     TThread             *fDispatchThread;
 
     Int_t               fCurrentTab;
+    Int_t               fCurrentCrate;
 
   public: 
     RootApp(const TGWindow *p,UInt_t w,UInt_t h); 
@@ -57,6 +60,9 @@ class RootApp : public TGMainFrame {
     TimeRatePlot        *fNhitRate;
     Hist2dPlot          *fCCCHits[20];
     Rate2dPlot          *fCCCRate[20];        
+    HistPlot            *fCrateHits[20];
+    TimeRatePlot        *fCrateRate[20];
+    HistPlot            *fCrateNhit[20];
 
 
 };

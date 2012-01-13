@@ -22,7 +22,8 @@ class Plot {
     Plot();
     ~Plot();
 
-    void SetECanvas(const char* name = 0, const TGWindow* p = 0, UInt_t w = 10, UInt_t h = 10);
+    void CreateECanvas(const char* name = 0, const TGWindow* p = 0, UInt_t w = 10, UInt_t h = 10);
+    void SetECanvas(TRootEmbeddedCanvas *ECanvas);
     TRootEmbeddedCanvas *GetECanvas();
     void Update();
     void Clear();

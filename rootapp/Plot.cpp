@@ -15,9 +15,15 @@ Plot::~Plot()
   delete fECanvas;
 }
 
-void Plot::SetECanvas(const char* name, const TGWindow* p, UInt_t w, UInt_t h)
+void Plot::CreateECanvas(const char* name, const TGWindow* p, UInt_t w, UInt_t h)
 {
   fECanvas = new TRootEmbeddedCanvas(name,p,w,h);
+  fCanvas = fECanvas->GetCanvas();
+}
+
+void Plot::SetECanvas(TRootEmbeddedCanvas *ECanvas)
+{
+  fECanvas = ECanvas;
   fCanvas = fECanvas->GetCanvas();
 }
 
