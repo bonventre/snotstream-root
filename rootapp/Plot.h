@@ -1,3 +1,6 @@
+#ifndef PLOT_H
+#define PLOT_H
+
 #include <TRootEmbeddedCanvas.h>
 #include <TCanvas.h>
 #include <TH1.h>
@@ -84,7 +87,8 @@ class Rate2dPlot : public Plot {
     Int_t               fYbins;
     Double_t            fStartTime;
     Double_t            fCurrentTime;
-    std::vector<Double_t> fCounts;
+//    std::vector<Double_t> fCounts;
+    Double_t            fCounts[512];
 
   public:
     Rate2dPlot(const char* name, const char* title, Int_t nbinsx, Double_t xlow, Double_t xup, Int_t nbinsy, Double_t ylow, Double_t yup);
@@ -94,3 +98,5 @@ class Rate2dPlot : public Plot {
     void Draw(const char* option);
     void Modified();
 };
+
+#endif

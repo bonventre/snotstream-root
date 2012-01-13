@@ -1,3 +1,8 @@
+#include <TRootEmbeddedCanvas.h>
+#include <TCanvas.h>
+#include <TH1.h>
+#include <TH2.h>
+
 #include "Plot.h"
 
 Plot::Plot()
@@ -113,6 +118,7 @@ void TimeRatePlot::Fill(Double_t counts, Double_t t)
 Hist2dPlot::Hist2dPlot(const char* name, const char* title, Int_t nbinsx, Double_t xlow, Double_t xup, Int_t nbinsy, Double_t ylow, Double_t yup)
 {
   fHist = new TH2F(name,title,nbinsx,xlow,xup,nbinsy,ylow,yup);
+  printf("made at %p\n",fHist);
 }
 
 Hist2dPlot::~Hist2dPlot()
@@ -139,7 +145,8 @@ Rate2dPlot::Rate2dPlot(const char* name, const char* title, Int_t nbinsx, Double
   fCurrentTime = 0;
   fXbins = nbinsx;
   fYbins = nbinsy;
-  fCounts.resize(nbinsx*nbinsy);
+  for (Int_t i=0;i<512;i++)
+    fCounts[i] = 0;
 }
 
 Rate2dPlot::~Rate2dPlot()
@@ -169,7 +176,7 @@ void Rate2dPlot::Modified()
 void Rate2dPlot::Fill(Double_t x, Double_t y, Double_t t)
 {
   if (fPaused == kFALSE){
-    fCounts[x*fYbins+y]++;
+    fCounts[(int)x*fYbins+(int)y]++;
     if (fStartTime == 0)
       fStartTime = t;
     else

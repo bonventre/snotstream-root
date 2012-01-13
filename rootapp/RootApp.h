@@ -1,3 +1,6 @@
+#ifndef ROOTAPP_H
+#define ROOTAPP_H
+
 #include "TGFrame.h" 
 #include "TThread.h"
 #include "TGMenu.h"
@@ -47,15 +50,15 @@ class RootApp : public TGMainFrame {
     void DoDraw(); 
     void DoTab(Int_t id);
 
-    static void *DispatchThread(void* arg);
-    static void *DrawThread(void* arg);
+    void *DispatchThread(void* arg);
+    void *DrawThread(void* arg);
 
     HistPlot            *fNhit;
     TimeRatePlot        *fNhitRate;
-    Hist2dPlot          *fCCCHits[19];
-    Rate2dPlot          *fCCCRate[19];        
+    Hist2dPlot          *fCCCHits[20];
+    Rate2dPlot          *fCCCRate[20];        
 
 
 };
 
-
+#endif

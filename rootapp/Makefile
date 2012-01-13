@@ -12,7 +12,7 @@ OBJS		= $(SRCS:.cpp=.o) dict.o
 all:		RootApp
 
 RootApp:		dict
-	$(CC) -o $@ $(SRCS) $(INCLUDE) $(CFLAGS) $(LFLAGS) $(LIBS) `root-config --cflags --glibs` 
+	$(CC) -o $@ $(SRCS) dict.C $(INCLUDE) $(CFLAGS) $(LFLAGS) $(LIBS) `root-config --cflags --glibs` 
 
 dict:
 	rm -f dict.*

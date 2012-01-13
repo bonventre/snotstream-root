@@ -31,6 +31,85 @@ enum menu_identifiers {
   M_EDIT_START
 };
 
+RootApp::RootApp(const TGWindow *p,UInt_t w,UInt_t h) : TGMainFrame(p,w,h) { 
+  fFinished = kFALSE;
+  fCurrentTab = 0;
+  fDrawThread = 0;
+
+  for (Int_t i=0;i<20;i++){
+    char tempname[10];
+    sprintf(tempname,"Crate %02d hits",i);
+    fCCCHits[i] = new Hist2dPlot(tempname,"Hits per channel",16,0,16,32,0,32);
+    sprintf(tempname,"Crate %02d rate",i);
+    fCCCRate[i] = new Rate2dPlot(tempname,"Hit Rate (hits/s) per channel",16,0,16,32,0,32);
+  }
+  fNhit = new HistPlot("Nhit","Nhit",20,0,400);
+  fNhitRate = new TimeRatePlot("Nhit rate","Scrolling average total hit rate (hits/s)",20,-20,0);
+
+  fDispatchThread = new TThread("dispatch",(void* (*) (void *)) &RootApp::DispatchThread,(void*) this);
+  fDispatchThread->Run();
+
+  fMainFrame = new TGVerticalFrame(this,100,100);
+  AddFrame(fMainFrame, new TGLayoutHints(kLHintsExpandX| kLHintsExpandY,0,0,0,0));  
+  SetupMenus();
+  SetupTabs(); 
+
+
+  // Set a name to the main frame 
+  SetWindowName("SNOTSTREAM"); 
+  // Map all subwindows of main frame 
+  MapSubwindows(); 
+  // Initialize the layout algorithm 
+  Resize(this->GetDefaultSize()); 
+  // Map main frame 
+  MapWindow(); 
+
+  //fToolTip = new TGToolTip(fClient->GetDefaultRoot(),fEcanvasnhit,"",250);
+  //fCanvasnhit->Connect("ProcessedEvent(Int_t,Int_t,Int_t,TObject*)","mainFrame",this,"EventInfo(Int_t,Int_t,Int_t,TObject*)");
+
+  while (!fFinished) {
+    for (Int_t i=0;i<20;i++){
+      fCCCHits[i]->Update();
+      fCCCRate[i]->Update();
+    }
+    fNhit->Update();
+    fNhitRate->Update();
+
+    gSystem->ProcessEvents();
+    usleep(100);
+  }
+
+  if (fDispatchThread)
+    fDispatchThread->Join();
+  if (fDrawThread)
+    fDrawThread->Join();
+
+  gApplication->Terminate();
+}
+
+RootApp::~RootApp() { 
+  // Clean up used widgets: frames, buttons, layouthints 
+  Cleanup(); 
+  delete fMenuBar;
+  delete fMenuFile;
+  delete fMenuEdit;
+  delete fMenuHelp;
+  delete fMainFrame;
+  delete fDisplayFrame;
+  delete fTab1;
+  delete fTab2;
+  delete fTab3;
+  delete fNhit;
+  delete fNhitRate;
+  for (Int_t i=0;i<20;i++){
+    delete fCCCHits[i];
+    delete fCCCRate[i];
+  }
+  delete fDispatchThread;
+  delete fDrawThread;
+
+}
+
 void RootApp::SetupMenus()
 {
   fMenuBar = new TGMenuBar(this,100,20,kHorizontalFrame);
@@ -57,7 +136,7 @@ void RootApp::SetupMenus()
   fMenuHelp->AddEntry("&About",1);
   fMenuBar->AddPopup("&Help",fMenuHelp,new TGLayoutHints(kLHintsTop | kLHintsRight) );
 
-  AddFrame(fMenuBar,new TGLayoutHints(kLHintsTop | kLHintsExpandX));
+  fMainFrame->AddFrame(fMenuBar,new TGLayoutHints(kLHintsTop | kLHintsExpandX));
 }
 
 void RootApp::SetupTabs()
@@ -196,29 +275,29 @@ void *RootApp::DrawThread(void* arg)
 
   TThread::Lock();
   for (Int_t i=0;i<20;i++){
-    temp->fCCCHits[i]->Draw("LEGO");
-    temp->fCCCRate[i]->Draw("LEGO");
+    fCCCHits[i]->Draw("LEGO");
+    fCCCRate[i]->Draw("LEGO");
   }
-  temp->fNhit->Draw();
-  temp->fNhitRate->Draw();
+  fNhit->Draw();
+  fNhitRate->Draw();
   TThread::UnLock();
 
   Int_t i=0;
-  while(temp->IsFinished() == kFALSE){
+  while(IsFinished() == kFALSE){
     //if (paused == kFALSE){
       i++;
       if (i==upd) i=0;
       if ((i%upd) == 0) {
-        if (temp->GetCurrentTab() == 1)
+        if (GetCurrentTab() == 1)
           for (Int_t j=0;j<20;j++)
-            temp->fCCCHits[j]->Modified();
-        if (temp->GetCurrentTab() == 0){
-          temp->fNhit->Modified();
-          temp->fNhitRate->Modified();
+            fCCCHits[j]->Modified();
+        if (GetCurrentTab() == 0){
+          fNhit->Modified();
+          fNhitRate->Modified();
         }
-        if (temp->GetCurrentTab() == 2){
+        if (GetCurrentTab() == 2){
           for (Int_t j=0;j<20;j++){
-            temp->fCCCRate[j]->Modified();
+            fCCCRate[j]->Modified();
           }
         }
         usleep(1000000);
@@ -233,9 +312,9 @@ void *RootApp::DispatchThread(void* arg)
 {
   RootApp* temp = (RootApp*) arg;
   avalanche::client client("tcp://localhost:5024");
-  while(temp->IsFinished() == kFALSE){
+  while(IsFinished() == kFALSE){
     RAT::DS::PackedRec* rec = (RAT::DS::PackedRec*) client.recvObject(RAT::DS::PackedRec::Class(),ZMQ_NOBLOCK);
-    if (rec == kFALSE){
+    if (rec){
       if (rec->RecordType == 1){
         RAT::DS::PackedEvent* event = (RAT::DS::PackedEvent*) rec->Rec;
         unsigned long clock10part1 = event->MTCInfo[0];
@@ -243,16 +322,16 @@ void *RootApp::DispatchThread(void* arg)
         double seconds = ((clock10part2 << 32) + clock10part1)/10000000.;
 
         printf("Got an event with nhit %u at time %f\n",event->NHits,seconds);
-        temp->fNhit->Fill(event->NHits);
-        temp->fNhitRate->Fill(event->NHits,seconds);
+        fNhit->Fill(event->NHits);
+        fNhitRate->Fill(event->NHits,seconds);
 
         for (Int_t i=0;i<event->PMTBundles.size();i++){
           RAT::DS::PMTBundle bundle = event->PMTBundles[i];
           int crate = (bundle.Word[0] >> 21) & (((ULong64_t)1 << 5) - 1);
           int card = (bundle.Word[0] >> 26) & (((ULong64_t)1 << 4) - 1);
           int chan = (bundle.Word[0] >> 16) & (((ULong64_t)1 << 5) - 1);
-          temp->fCCCHits[crate]->Fill(card,chan);
-          temp->fCCCRate[crate]->Fill(card,chan,seconds);
+          fCCCHits[crate]->Fill(card,chan);
+          fCCCRate[crate]->Fill(card,chan,seconds);
         }
       }
     }
@@ -260,87 +339,6 @@ void *RootApp::DispatchThread(void* arg)
   }
   printf("Dispatch thread exiting\n");
   return 0;
-}
-
-RootApp::RootApp(const TGWindow *p,UInt_t w,UInt_t h) : TGMainFrame(p,w,h) { 
-  fFinished = kFALSE;
-  fCurrentTab = 0;
-  fDrawThread = 0;
-
-  for (Int_t i=0;i<20;i++){
-    char tempname[10];
-    sprintf(tempname,"Crate %02d hits",i);
-    fCCCHits[i] = new Hist2dPlot(tempname,"Hits per channel",16,0,16,32,0,32);
-    sprintf(tempname,"Crate %02d rate",i);
-    fCCCRate[i] = new Rate2dPlot(tempname,"Hit Rate (hits/s) per channel",16,0,16,32,0,32);
-  }
-  fNhit = new HistPlot("Nhit","Nhit",20,0,400);
-  fNhitRate = new TimeRatePlot("Nhit rate","Scrolling average total hit rate (hits/s)",20,-20,0);
-
-  fDispatchThread = new TThread("dispatch",(void* (*) (void *)) &RootApp::DispatchThread,(void*) this);
-  fDispatchThread->Run();
-
-  fMainFrame = new TGVerticalFrame(this,100,100);
-
-  SetupMenus();
-  SetupTabs(); 
-
-  AddFrame(fMainFrame, new TGLayoutHints(kLHintsExpandX| kLHintsExpandY, 
-        10,10,10,1));  
-
-  // Set a name to the main frame 
-  SetWindowName("SNOTSTREAM"); 
-  // Map all subwindows of main frame 
-  MapSubwindows(); 
-  // Initialize the layout algorithm 
-  Resize(this->GetDefaultSize()); 
-  // Map main frame 
-  MapWindow(); 
-
-  //fToolTip = new TGToolTip(fClient->GetDefaultRoot(),fEcanvasnhit,"",250);
-  //fCanvasnhit->Connect("ProcessedEvent(Int_t,Int_t,Int_t,TObject*)","mainFrame",this,"EventInfo(Int_t,Int_t,Int_t,TObject*)");
-
-  while (!fFinished) {
-    for (Int_t i=0;i<20;i++){
-      fCCCHits[i]->Update();
-      fCCCRate[i]->Update();
-    }
-    fNhit->Update();
-    fNhitRate->Update();
-
-    gSystem->ProcessEvents();
-    usleep(100);
-  }
-
-  if (fDispatchThread)
-    fDispatchThread->Join();
-  if (fDrawThread)
-    fDrawThread->Join();
-
-  gApplication->Terminate();
-}
-
-RootApp::~RootApp() { 
-  // Clean up used widgets: frames, buttons, layouthints 
-  Cleanup(); 
-  delete fMenuBar;
-  delete fMenuFile;
-  delete fMenuEdit;
-  delete fMenuHelp;
-  delete fMainFrame;
-  delete fDisplayFrame;
-  delete fTab1;
-  delete fTab2;
-  delete fTab3;
-  delete fNhit;
-  delete fNhitRate;
-  for (Int_t i=0;i<20;i++){
-    delete fCCCHits[i];
-    delete fCCCRate[i];
-  }
-  delete fDispatchThread;
-  delete fDrawThread;
-
 }
 
 int main(int argc, char *argv[])
