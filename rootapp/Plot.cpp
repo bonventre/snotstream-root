@@ -39,6 +39,16 @@ void Plot::Modified()
   fCanvas->Modified();
 }
 
+void Plot::Pause()
+{
+  fPaused = kTRUE;
+}
+
+void Plot::UnPause()
+{
+  fPaused = kFALSE;
+}
+
 HistPlot::~HistPlot()
 {
   delete fHist;
@@ -52,7 +62,8 @@ void HistPlot::Draw()
 
 void HistPlot::Fill(Double_t x)
 {
-  fHist->Fill(x);
+  if (fPaused == kFALSE)
+    fHist->Fill(x);
 }
 
 TimeRatePlot::TimeRatePlot(const char* name, const char* title, Int_t nbinsx, Double_t xlow, Double_t xup)
@@ -77,23 +88,25 @@ void TimeRatePlot::Draw()
 
 void TimeRatePlot::Fill(Double_t counts, Double_t t)
 {
-  if (fFirstBinTime == 0)
-    fFirstBinTime = t;
-  if ((t-fFirstBinTime) < 1){
-    fFirstBinCount += counts;
-  }else{
-    int howmany = (int) (t-fFirstBinTime);
-    for (Int_t j=1;j<fXbins;j++){
-      if (j+howmany > fXbins)
-        fHist->SetBinContent(j,0);
-      else{
-        double bc = fHist->GetBinContent(j+howmany+1);
-        fHist->SetBinContent(j+1,bc);
+  if (fPaused == kFALSE){
+    if (fFirstBinTime == 0)
+      fFirstBinTime = t;
+    if ((t-fFirstBinTime) < 1){
+      fFirstBinCount += counts;
+    }else{
+      int howmany = (int) (t-fFirstBinTime);
+      for (Int_t j=1;j<fXbins;j++){
+        if (j+howmany > fXbins)
+          fHist->SetBinContent(j,0);
+        else{
+          double bc = fHist->GetBinContent(j+howmany+1);
+          fHist->SetBinContent(j+1,bc);
+        }
       }
+      fHist->SetBinContent(fXbins,fFirstBinCount);
+      fFirstBinTime += howmany;
+      fFirstBinCount = counts;
     }
-    fHist->SetBinContent(fXbins,fFirstBinCount);
-    fFirstBinTime += howmany;
-    fFirstBinCount = counts;
   }
 }
 
@@ -115,7 +128,8 @@ void Hist2dPlot::Draw(const char* option)
 
 void Hist2dPlot::Fill(Double_t x,Double_t y)
 {
-  fHist->Fill(x,y);
+  if (fPaused == kFALSE)
+    fHist->Fill(x,y);
 }
 
 Rate2dPlot::Rate2dPlot(const char* name, const char* title, Int_t nbinsx, Double_t xlow, Double_t xup, Int_t nbinsy, Double_t ylow, Double_t yup)
@@ -154,9 +168,11 @@ void Rate2dPlot::Modified()
 
 void Rate2dPlot::Fill(Double_t x, Double_t y, Double_t t)
 {
-  fCounts[x*fYbins+y]++;
-  if (fStartTime == 0)
-    fStartTime = t;
-  else
-    fCurrentTime = t;
+  if (fPaused == kFALSE){
+    fCounts[x*fYbins+y]++;
+    if (fStartTime == 0)
+      fStartTime = t;
+    else
+      fCurrentTime = t;
+  }
 }

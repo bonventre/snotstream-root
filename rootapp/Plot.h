@@ -24,6 +24,8 @@ class Plot {
     void Update();
     void Clear();
     void Modified();
+    void Pause();
+    void UnPause();
 };
 
 class HistPlot : public Plot {

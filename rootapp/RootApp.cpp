@@ -1,24 +1,24 @@
-#include <TApplication.h>
-#include <TThread.h>
-#include <TGFrame.h>
-#include <TGObject.h>
-#include <TGClient.h> 
-#include <TCanvas.h>  
-#include <TH1.h> 
-#include <TH2.h> 
-#include <TGButton.h> 
-#include <TGMenu.h>
-#include <TSystem.h>
-#include <TApplication.h>
-#include <TGTableLayout.h>
-#include <TGTab.h>
-#include <TGToolTip.h>
-#include <time.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <jsoncpp/json.h>
-#include <RAT/DS/PackedEvent.hh>
-#include <avalanche.hpp>
+#include "TApplication.h"
+#include "TThread.h"
+#include "TGFrame.h"
+#include "TGObject.h"
+#include "TGClient.h" 
+#include "TCanvas.h"  
+#include "TH1.h" 
+#include "TH2.h" 
+#include "TGButton.h" 
+#include "TGMenu.h"
+#include "TSystem.h"
+#include "TApplication.h"
+#include "TGTableLayout.h"
+#include "TGTab.h"
+#include "TGToolTip.h"
+#include "time.h"
+#include "stdlib.h"
+#include "stdio.h"
+#include "jsoncpp/json.h"
+#include "RAT/DS/PackedEvent.hh"
+#include "avalanche.hpp"
 
 #include "RootApp.h"
 
@@ -129,12 +129,22 @@ void RootApp::HandleMenu(Int_t id)
       }
       break;
     case M_EDIT_PAUSE:
-      //paused = kTRUE;
+      fNhit->Pause();
+      fNhitRate->Pause();
+      for (Int_t i=0;i<20;i++){
+        fCCCHits[i]->Pause();
+        fCCCRate[i]->Pause();
+      }
       fMenuEdit->DisableEntry(M_EDIT_PAUSE);
       fMenuEdit->EnableEntry(M_EDIT_START);
       break;
     case M_EDIT_START:
-      //paused = kFALSE;
+      fNhit->UnPause();
+      fNhitRate->UnPause();
+      for (Int_t i=0;i<20;i++){
+        fCCCHits[i]->UnPause();
+        fCCCRate[i]->UnPause();
+      }
       fMenuEdit->DisableEntry(M_EDIT_START);
       fMenuEdit->EnableEntry(M_EDIT_PAUSE);
       break;
@@ -225,7 +235,6 @@ void *RootApp::DispatchThread(void* arg)
   avalanche::client client("tcp://localhost:5024");
   while(temp->IsFinished() == kFALSE){
     RAT::DS::PackedRec* rec = (RAT::DS::PackedRec*) client.recvObject(RAT::DS::PackedRec::Class(),ZMQ_NOBLOCK);
-    //if (rec && paused == kFALSE){
     if (rec == kFALSE){
       if (rec->RecordType == 1){
         RAT::DS::PackedEvent* event = (RAT::DS::PackedEvent*) rec->Rec;
@@ -233,7 +242,7 @@ void *RootApp::DispatchThread(void* arg)
         unsigned long clock10part2 = event->MTCInfo[1] & 0x1FFFF;
         double seconds = ((clock10part2 << 32) + clock10part1)/10000000.;
 
-        printf("Got an event with nhit %u at time %d\n",event->NHits,seconds);
+        printf("Got an event with nhit %u at time %f\n",event->NHits,seconds);
         temp->fNhit->Fill(event->NHits);
         temp->fNhitRate->Fill(event->NHits,seconds);
 
@@ -267,7 +276,7 @@ RootApp::RootApp(const TGWindow *p,UInt_t w,UInt_t h) : TGMainFrame(p,w,h) {
   }
   fNhit = new HistPlot("Nhit","Nhit",20,0,400);
   fNhitRate = new TimeRatePlot("Nhit rate","Scrolling average total hit rate (hits/s)",20,-20,0);
-  
+
   fDispatchThread = new TThread("dispatch",(void* (*) (void *)) &RootApp::DispatchThread,(void*) this);
   fDispatchThread->Run();
 
@@ -290,7 +299,7 @@ RootApp::RootApp(const TGWindow *p,UInt_t w,UInt_t h) : TGMainFrame(p,w,h) {
 
   //fToolTip = new TGToolTip(fClient->GetDefaultRoot(),fEcanvasnhit,"",250);
   //fCanvasnhit->Connect("ProcessedEvent(Int_t,Int_t,Int_t,TObject*)","mainFrame",this,"EventInfo(Int_t,Int_t,Int_t,TObject*)");
-  
+
   while (!fFinished) {
     for (Int_t i=0;i<20;i++){
       fCCCHits[i]->Update();

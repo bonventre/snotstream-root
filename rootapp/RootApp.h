@@ -1,9 +1,9 @@
-#include <TGFrame.h> 
-#include <TThread.h>
-#include <TGMenu.h>
-#include <TGToolTip.h>
-#include <TGTab.h>
-#include <RQ_OBJECT.h> 
+#include "TGFrame.h" 
+#include "TThread.h"
+#include "TGMenu.h"
+#include "TGToolTip.h"
+#include "TGTab.h"
+#include "RQ_OBJECT.h" 
 
 #include "Plot.h"
 
