@@ -5,15 +5,15 @@ INCLUDE = -I$(ROOTSYS)/include -I$(AVALANCHE) -I$(RATROOT)/include
 
 LIBS	  = -lzmq -lavalanche -ljson_linux-gcc-4.4.3_libmt -lRATEvent_Linux-g++ 
 
-SRCS		= main.C mainFrame.C
-HDRS		= $(SRCS:.C=.h)
-OBJS		= $(SRCS:.C=.o) dict.o
+SRCS		= RootApp.cpp Plot.cpp
+HDRS		= $(SRCS:.cpp=.h)
+OBJS		= $(SRCS:.cpp=.o) dict.o
 
-all:		main
+all:		RootApp
 
-main:		dict
-	$(CC) -o $@ main.C mainFrame.C dict.C $(INCLUDE) $(CFLAGS) $(LFLAGS) $(LIBS) `root-config --cflags --glibs` 
+RootApp:		dict
+	$(CC) -o $@ $(SRCS) $(INCLUDE) $(CFLAGS) $(LFLAGS) $(LIBS) `root-config --cflags --glibs` 
 
 dict:
 	rm -f dict.*
-	rootcint dict.C -c mainFrame.h
+	rootcint dict.C -c RootApp.h Plot.h

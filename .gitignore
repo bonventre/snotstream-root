@@ -1,0 +1,5 @@
+RootApp
+*ACLiC.check.o
+dict.C
+dict.h
+*.d
