@@ -335,45 +335,45 @@ void *RootApp::DrawThread(void* arg)
 
   TThread::Lock();
   for (Int_t i=0;i<20;i++){
-    fCCCHits[i]->Draw("LEGO");
-    fCCCRate[i]->Draw("LEGO");
+    temp->fCCCHits[i]->Draw("LEGO");
+    temp->fCCCRate[i]->Draw("LEGO");
   }
-  fNhit->Draw();
-  fNhitRate->Draw();
-  fCrateHits[0]->Draw();
-  fCrateRate[0]->Draw();
-  fCrateNhit[0]->Draw();
-  fTrigCount->Draw();
-  fTrigRate->Draw();
+  temp->fNhit->Draw();
+  temp->fNhitRate->Draw();
+  temp->fCrateHits[0]->Draw();
+  temp->fCrateRate[0]->Draw();
+  temp->fCrateNhit[0]->Draw();
+  temp->fTrigCount->Draw();
+  temp->fTrigRate->Draw();
   TThread::UnLock();
 
   Int_t i=0;
-  while(IsFinished() == kFALSE){
+  while(temp->IsFinished() == kFALSE){
       i++;
       if (i==upd) i=0;
       if ((i%upd) == 0) {
-        switch(GetCurrentTab()){
+        switch(temp->GetCurrentTab()){
           case 0:
-            fNhit->Modified();
-            fNhitRate->Modified();
+            temp->fNhit->Modified();
+            temp->fNhitRate->Modified();
             break;
           case 1: 
             for (Int_t j=0;j<20;j++)
-              fCCCHits[j]->Modified();
+              temp->fCCCHits[j]->Modified();
             break;
           case 2:
             for (Int_t j=0;j<20;j++){
-              fCCCRate[j]->Modified();
+              temp->fCCCRate[j]->Modified();
             }
             break;
           case 3:
-            fCrateHits[fCurrentCrate]->Modified();
-            fCrateRate[fCurrentCrate]->Modified();
-            fCrateNhit[fCurrentCrate]->Modified();
+            temp->fCrateHits[temp->GetCurrentCrate()]->Modified();
+            temp->fCrateRate[temp->GetCurrentCrate()]->Modified();
+            temp->fCrateNhit[temp->GetCurrentCrate()]->Modified();
             break;
           case 4:
-            fTrigCount->Modified();
-            fTrigRate->Modified();
+            temp->fTrigCount->Modified();
+            temp->fTrigRate->Modified();
           break;
         }
         usleep(1000000);
@@ -387,7 +387,7 @@ void *RootApp::DispatchThread(void* arg)
 {
   RootApp* temp = (RootApp*) arg;
   avalanche::client client("tcp://localhost:5024");
-  while(IsFinished() == kFALSE){
+  while(temp->IsFinished() == kFALSE){
     RAT::DS::PackedRec* rec = (RAT::DS::PackedRec*) client.recvObject(RAT::DS::PackedRec::Class(),ZMQ_NOBLOCK);
     if (rec){
       if (rec->RecordType == 1){
@@ -400,23 +400,23 @@ void *RootApp::DispatchThread(void* arg)
         for (Int_t i=0;i<26;i++){
           if ((0x1<<i) & trigtype){
             if (i<7){
-            fTrigCount->Fill(i);
-            fTrigRate->Fill(i,seconds);
+            temp->fTrigCount->Fill(i);
+            temp->fTrigRate->Fill(i,seconds);
             }
             if (i==10){
-              fTrigCount->Fill(7);
-              fTrigRate->Fill(7,seconds);
+              temp->fTrigCount->Fill(7);
+              temp->fTrigRate->Fill(7,seconds);
             }
             if (i==11){
-              fTrigCount->Fill(8);
-              fTrigRate->Fill(8,seconds);
+              temp->fTrigCount->Fill(8);
+              temp->fTrigRate->Fill(8,seconds);
             }
           }
         }
 
         printf("Got an event with nhit %u at time %f with mask %08x\n",event->NHits,seconds,trigtype);
-        fNhit->Fill(event->NHits);
-        fNhitRate->Fill(event->NHits,seconds);
+        temp->fNhit->Fill(event->NHits);
+        temp->fNhitRate->Fill(event->NHits,seconds);
 
         Int_t NhitPerCrate[20];
         for (Int_t i=0;i<20;i++)
@@ -426,15 +426,15 @@ void *RootApp::DispatchThread(void* arg)
           int crate = (bundle.Word[0] >> 21) & (((ULong64_t)1 << 5) - 1);
           int card = (bundle.Word[0] >> 26) & (((ULong64_t)1 << 4) - 1);
           int chan = (bundle.Word[0] >> 16) & (((ULong64_t)1 << 5) - 1);
-          fCCCHits[crate]->Fill(card,chan);
-          fCCCRate[crate]->Fill(card,chan,seconds);
-          fCrateHits[crate]->Fill(card*32+chan);
+          temp->fCCCHits[crate]->Fill(card,chan);
+          temp->fCCCRate[crate]->Fill(card,chan,seconds);
+          temp->fCrateHits[crate]->Fill(card*32+chan);
           NhitPerCrate[crate]++;
         }
 
         for (Int_t i=0;i<20;i++){
-          fCrateNhit[i]->Fill(NhitPerCrate[i]);
-          fCrateRate[i]->Fill(NhitPerCrate[i],seconds);
+          temp->fCrateNhit[i]->Fill(NhitPerCrate[i]);
+          temp->fCrateRate[i]->Fill(NhitPerCrate[i],seconds);
         }
       }
     }

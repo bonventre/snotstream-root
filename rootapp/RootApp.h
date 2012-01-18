@@ -45,6 +45,7 @@ class RootApp : public TGMainFrame {
     void SetupMenus();
     void SetupTabs();
 
+    Int_t GetCurrentCrate(){return fCurrentCrate;};
     Int_t GetCurrentTab(){return fCurrentTab;};
     Bool_t IsFinished(){return fFinished;};
     virtual void CloseWindow();
@@ -54,8 +55,8 @@ class RootApp : public TGMainFrame {
     void DoDraw(); 
     void DoTab(Int_t id);
 
-    void *DispatchThread(void* arg);
-    void *DrawThread(void* arg);
+    static void *DispatchThread(void* arg);
+    static void *DrawThread(void* arg);
 
     HistPlot            *fNhit;
     TimeRatePlot        *fNhitRate;
