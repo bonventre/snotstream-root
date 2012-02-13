@@ -7,6 +7,7 @@
 #include "TGToolTip.h"
 #include "TGTab.h"
 #include "RQ_OBJECT.h" 
+#include <vector>
 
 #include "Plot.h"
 
@@ -31,6 +32,7 @@ class RootApp : public TGMainFrame {
     TGCompositeFrame    *fTab3;
     TGCompositeFrame    *fTab4;
     TGCompositeFrame    *fTab5;
+    TGCompositeFrame    *fTab6;
 
     TThread             *fDrawThread;
     TThread             *fDispatchThread;
@@ -58,16 +60,26 @@ class RootApp : public TGMainFrame {
     static void *DispatchThread(void* arg);
     static void *DrawThread(void* arg);
 
+    //tab1
     HistPlot            *fNhit;
-    TimeRatePlot        *fNhitRate;
+    TimeRatePlot        *fNhitTimeRate;
+    //tab2
     Hist2dPlot          *fCCCHits[20];
+    //tab3
     Rate2dPlot          *fCCCRate[20];        
+    //tab4
+    Rate2dPlot          *fCCCCmosRate[20];        
+    //tab5
     HistPlot            *fCrateHits[20];
-    TimeRatePlot        *fCrateRate[20];
+    RatePlot            *fCrateRate[20];
+    RatePlot            *fCrateCmosRate[20];
+    TimeRatePlot        *fCrateTimeRate[20];
     HistPlot            *fCrateNhit[20];
+    //tab6
     HistPlot            *fTrigCount;
     RatePlot            *fTrigRate;
 
+    std::vector<Plot*>  fPlots;
 
 };
 

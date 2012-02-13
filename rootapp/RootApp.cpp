@@ -40,22 +40,51 @@ RootApp::RootApp(const TGWindow *p,UInt_t w,UInt_t h) : TGMainFrame(p,w,h) {
     char tempname[10];
     sprintf(tempname,"Crate %02d CC hits",i);
     fCCCHits[i] = new Hist2dPlot(this,tempname,"Hits per channel",16,0,16,32,0,32);
+    fPlots.push_back(fCCCHits[i]);
+
     sprintf(tempname,"Crate %02d CC rate",i);
     fCCCRate[i] = new Rate2dPlot(this,tempname,"Hit Rate (hits/s) per channel",16,0,16,32,0,32);
+    fPlots.push_back(fCCCRate[i]);
+
+    sprintf(tempname,"Crate %02d CMOS rate",i);
+    fCCCCmosRate[i] = new Rate2dPlot(this,tempname,"CMOS Rate (1/s) per channel",16,0,16,32,0,32);
+    fPlots.push_back(fCCCCmosRate[i]);
+
     sprintf(tempname,"Crate %02d hits",i);
     fCrateHits[i] = new HistPlot(this,tempname,"Hits per channel",512,0,512);
+    fPlots.push_back(fCrateHits[i]);
+
     sprintf(tempname,"Crate %02d rate",i);
-    fCrateRate[i] = new TimeRatePlot(this,tempname,"Scrolling average hit rate (hits/s)",20,-20,0);
+    fCrateRate[i]  = new RatePlot(this,tempname,"Hit Rate (hits/s) per channel",512,0,512);
+    fPlots.push_back(fCrateRate[i]);
+
+    sprintf(tempname,"Crate %02d CMOS rate",i);
+    fCrateCmosRate[i]  = new RatePlot(this,tempname,"CMOS Rate (1/s) per channel",512,0,512);
+    fPlots.push_back(fCrateCmosRate[i]);
+
+    sprintf(tempname,"Crate %02d rate",i);
+    fCrateTimeRate[i] = new TimeRatePlot(this,tempname,"Scrolling average hit rate (hits/s)",20,-20,0);
+    fPlots.push_back(fCrateTimeRate[i]);
+    
     sprintf(tempname,"Crate %02d NHit",i);
     fCrateNhit[i] = new HistPlot(this,tempname,"Nhit",20,0,40);
+    fPlots.push_back(fCrateNhit[i]);
   }
+
   fNhit = new HistPlot(this,"Nhit","Nhit",20,0,400);
-  fNhitRate = new TimeRatePlot(this,"Nhit rate","Scrolling average total hit rate (hits/s)",20,-20,0);
+  fPlots.push_back(fNhit);
+  
+  fNhitTimeRate = new TimeRatePlot(this,"Nhit rate","Scrolling average total hit rate (hits/s)",20,-20,0);
+  fPlots.push_back(fNhitTimeRate);
+  
   char triggernames[9][30] = {"N100L","N100M","N100H","N20","N20L","ESUML","ESUMH","PulseGT","PreScale"};
   fTrigCount = new HistPlot(this,"Trigger Counts","Trigger Counts",9,0,9);
   fTrigCount->SetBinLabels(triggernames);
+  fPlots.push_back(fTrigCount);
+  
   fTrigRate  = new RatePlot(this,"Trigger Rates","Trigger Rates",9,0,9);
   fTrigRate->SetBinLabels(triggernames);
+  fPlots.push_back(fTrigRate);
 
   fDispatchThread = new TThread("dispatch",(void* (*) (void *)) &RootApp::DispatchThread,(void*) this);
   fDispatchThread->Run();
@@ -78,17 +107,9 @@ RootApp::RootApp(const TGWindow *p,UInt_t w,UInt_t h) : TGMainFrame(p,w,h) {
   MapWindow(); 
 
   while (!fFinished) {
-    for (Int_t i=0;i<20;i++){
-      fCCCHits[i]->Update();
-      fCCCRate[i]->Update();
-      fCrateHits[i]->Update();
-      fCrateRate[i]->Update();
-      fCrateNhit[i]->Update();
+    for (Int_t i=0;i<fPlots.size();i++){
+      fPlots[i]->Update();
     }
-    fNhit->Update();
-    fNhitRate->Update();
-    fTrigCount->Update();
-    fTrigRate->Update();
 
     gSystem->ProcessEvents();
     usleep(100);
@@ -114,14 +135,11 @@ RootApp::~RootApp() {
   delete fTab1;
   delete fTab2;
   delete fTab3;
-  delete fNhit;
-  delete fNhitRate;
-  for (Int_t i=0;i<20;i++){
-    delete fCCCHits[i];
-    delete fCCCRate[i];
-    delete fCrateHits[i];
-    delete fCrateRate[i];
-    delete fCrateNhit[i];
+  delete fTab4;
+  delete fTab5;
+  delete fTab6;
+  for (Int_t i=0;i<fPlots.size();i++){
+    delete fPlots[i];
   }
   delete fDispatchThread;
   delete fDrawThread;
@@ -177,8 +195,8 @@ void RootApp::SetupTabs()
   fTab1->SetLayoutManager(new TGTableLayout(fTab1,2,1));
   fNhit->CreateECanvas("nhit",fTab1,100,100); 
   fTab1->AddFrame(fNhit->GetECanvas(),new TGTableLayoutHints(0,1,0,1,kLHintsFillX | kLHintsFillY | kLHintsShrinkX | kLHintsShrinkY | kLHintsExpandX | kLHintsExpandY));
-  fNhitRate->CreateECanvas("nhit rate",fTab1,100,100); 
-  fTab1->AddFrame(fNhitRate->GetECanvas(),new TGTableLayoutHints(0,1,1,2,kLHintsFillX | kLHintsFillY | kLHintsShrinkX | kLHintsShrinkY | kLHintsExpandX | kLHintsExpandY));
+  fNhitTimeRate->CreateECanvas("nhit rate",fTab1,100,100); 
+  fTab1->AddFrame(fNhitTimeRate->GetECanvas(),new TGTableLayoutHints(0,1,1,2,kLHintsFillX | kLHintsFillY | kLHintsShrinkX | kLHintsShrinkY | kLHintsExpandX | kLHintsExpandY));
 
   fTab2 = fDisplayFrame->AddTab("Hits per Channel");
   fTab2->SetLayoutManager(new TGTableLayout(fTab2,5,4));
@@ -202,26 +220,43 @@ void RootApp::SetupTabs()
     }
   }
 
-  fTab4 = fDisplayFrame->AddTab("Crate");
-  fTab4->SetLayoutManager(new TGTableLayout(fTab4,2,2));
-  fCrateHits[0]->CreateECanvas("hits",fTab4,100,100);
-  fTab4->AddFrame(fCrateHits[0]->GetECanvas(),new TGTableLayoutHints(0,1,0,1,kLHintsFillX | kLHintsFillY | kLHintsShrinkX | kLHintsShrinkY | kLHintsExpandX | kLHintsExpandY));
-  fCrateRate[0]->CreateECanvas("rate",fTab4,100,100);
-  fTab4->AddFrame(fCrateRate[0]->GetECanvas(),new TGTableLayoutHints(1,2,0,1,kLHintsFillX | kLHintsFillY | kLHintsShrinkX | kLHintsShrinkY | kLHintsExpandX | kLHintsExpandY));
-  fCrateNhit[0]->CreateECanvas("nhit",fTab4,100,100);
-  fTab4->AddFrame(fCrateNhit[0]->GetECanvas(),new TGTableLayoutHints(0,2,1,2,kLHintsFillX | kLHintsFillY | kLHintsShrinkX | kLHintsShrinkY | kLHintsExpandX | kLHintsExpandY));
-  for (Int_t i=1;i<20;i++){
-    fCrateHits[i]->SetECanvas(fCrateHits[0]->GetECanvas());
-    fCrateRate[i]->SetECanvas(fCrateRate[0]->GetECanvas());
-    fCrateNhit[i]->SetECanvas(fCrateNhit[0]->GetECanvas());
+  fTab4 = fDisplayFrame->AddTab("Cmos Rate per Channel");
+  fTab4->SetLayoutManager(new TGTableLayout(fTab4,5,4));
+  for (Int_t i=0;i<5;i++){
+    for (Int_t j=0;j<4;j++){
+      char tempname[20];
+      sprintf(tempname,"%02d cmos rate",i*4+j);
+      fCCCCmosRate[i*4+j]->CreateECanvas(tempname,fTab4,100,100);
+      fTab4->AddFrame(fCCCCmosRate[i*4+j]->GetECanvas(),new TGTableLayoutHints(j,j+1,i,i+1,kLHintsFillX | kLHintsFillY | kLHintsShrinkX | kLHintsShrinkY | kLHintsExpandX | kLHintsExpandY));
+    }
   }
 
-  fTab5 = fDisplayFrame->AddTab("Triggers");
-  fTab5->SetLayoutManager(new TGTableLayout(fTab5,2,1));
-  fTrigCount->CreateECanvas("trigcounts",fTab5,100,100);
-  fTab5->AddFrame(fTrigCount->GetECanvas(),new TGTableLayoutHints(0,1,0,1,kLHintsFillX | kLHintsFillY | kLHintsShrinkX | kLHintsShrinkY | kLHintsExpandX | kLHintsExpandY));
-  fTrigRate->CreateECanvas("trigcounts",fTab5,100,100);
-  fTab5->AddFrame(fTrigRate->GetECanvas(),new TGTableLayoutHints(0,1,1,2,kLHintsFillX | kLHintsFillY | kLHintsShrinkX | kLHintsShrinkY | kLHintsExpandX | kLHintsExpandY));
+  fTab5 = fDisplayFrame->AddTab("Crate");
+  fTab5->SetLayoutManager(new TGTableLayout(fTab5,3,2));
+  fCrateHits[0]->CreateECanvas("hits",fTab5,100,100);
+  fTab5->AddFrame(fCrateHits[0]->GetECanvas(),new TGTableLayoutHints(0,1,0,1,kLHintsFillX | kLHintsFillY | kLHintsShrinkX | kLHintsShrinkY | kLHintsExpandX | kLHintsExpandY));
+  fCrateTimeRate[0]->CreateECanvas("time rate",fTab5,100,100);
+  fTab5->AddFrame(fCrateTimeRate[0]->GetECanvas(),new TGTableLayoutHints(1,2,0,1,kLHintsFillX | kLHintsFillY | kLHintsShrinkX | kLHintsShrinkY | kLHintsExpandX | kLHintsExpandY));
+  fCrateRate[0]->CreateECanvas("rate",fTab5,100,100);
+  fTab5->AddFrame(fCrateRate[0]->GetECanvas(),new TGTableLayoutHints(0,1,1,2,kLHintsFillX | kLHintsFillY | kLHintsShrinkX | kLHintsShrinkY | kLHintsExpandX | kLHintsExpandY));
+  fCrateCmosRate[0]->CreateECanvas("cmos rate",fTab5,100,100);
+  fTab5->AddFrame(fCrateCmosRate[0]->GetECanvas(),new TGTableLayoutHints(1,2,1,2,kLHintsFillX | kLHintsFillY | kLHintsShrinkX | kLHintsShrinkY | kLHintsExpandX | kLHintsExpandY));
+  fCrateNhit[0]->CreateECanvas("nhit",fTab5,100,100);
+  fTab5->AddFrame(fCrateNhit[0]->GetECanvas(),new TGTableLayoutHints(0,2,2,3,kLHintsFillX | kLHintsFillY | kLHintsShrinkX | kLHintsShrinkY | kLHintsExpandX | kLHintsExpandY));
+  for (Int_t i=1;i<20;i++){
+    fCrateHits[i]->SetECanvas(fCrateHits[0]->GetECanvas());
+    fCrateTimeRate[i]->SetECanvas(fCrateTimeRate[0]->GetECanvas());
+    fCrateNhit[i]->SetECanvas(fCrateNhit[0]->GetECanvas());
+    fCrateRate[i]->SetECanvas(fCrateRate[0]->GetECanvas());
+    fCrateCmosRate[i]->SetECanvas(fCrateCmosRate[0]->GetECanvas());
+  }
+
+  fTab6 = fDisplayFrame->AddTab("Triggers");
+  fTab6->SetLayoutManager(new TGTableLayout(fTab6,2,1));
+  fTrigCount->CreateECanvas("trigcounts",fTab6,100,100);
+  fTab6->AddFrame(fTrigCount->GetECanvas(),new TGTableLayoutHints(0,1,0,1,kLHintsFillX | kLHintsFillY | kLHintsShrinkX | kLHintsShrinkY | kLHintsExpandX | kLHintsExpandY));
+  fTrigRate->CreateECanvas("trigcounts",fTab6,100,100);
+  fTab6->AddFrame(fTrigRate->GetECanvas(),new TGTableLayoutHints(0,1,1,2,kLHintsFillX | kLHintsFillY | kLHintsShrinkX | kLHintsShrinkY | kLHintsExpandX | kLHintsExpandY));
 
   fMainFrame->AddFrame(fDisplayFrame, new TGLayoutHints(kLHintsExpandX| kLHintsExpandY, 
         10,10,10,1));  
@@ -250,45 +285,21 @@ void RootApp::HandleMenu(Int_t id)
       CloseWindow();
       break;
     case M_EDIT_CLEAR_ALL:
-      fNhit->Clear();
-      fNhitRate->Clear();
-      for (Int_t i=0;i<20;i++){
-        fCCCHits[i]->Clear();
-        fCCCRate[i]->Clear();
-        fCrateHits[i]->Clear();
-        fCrateRate[i]->Clear();
-        fCrateNhit[i]->Clear();
+      for (Int_t i=0;i<fPlots.size();i++){
+        fPlots[i]->Clear();
       }
-      fTrigCount->Clear();
-      fTrigRate->Clear();
       break;
     case M_EDIT_PAUSE:
-      fNhit->Pause();
-      fNhitRate->Pause();
-      for (Int_t i=0;i<20;i++){
-        fCCCHits[i]->Pause();
-        fCCCRate[i]->Pause();
-        fCrateHits[i]->Pause();
-        fCrateRate[i]->Pause();
-        fCrateNhit[i]->Pause();
+      for (Int_t i=0;i<fPlots.size();i++){
+        fPlots[i]->Pause();
       }
-      fTrigCount->Pause();
-      fTrigRate->Pause();
       fMenuEdit->DisableEntry(M_EDIT_PAUSE);
       fMenuEdit->EnableEntry(M_EDIT_START);
       break;
     case M_EDIT_START:
-      fNhit->UnPause();
-      fNhitRate->UnPause();
-      for (Int_t i=0;i<20;i++){
-        fCCCHits[i]->UnPause();
-        fCCCRate[i]->UnPause();
-        fCrateHits[i]->UnPause();
-        fCrateRate[i]->UnPause();
-        fCrateNhit[i]->UnPause();
+      for (Int_t i=0;i<fPlots.size();i++){
+        fPlots[i]->UnPause();
       }
-      fTrigCount->UnPause();
-      fTrigRate->UnPause();
       fMenuEdit->DisableEntry(M_EDIT_START);
       fMenuEdit->EnableEntry(M_EDIT_PAUSE);
       break;
@@ -301,9 +312,11 @@ void RootApp::HandleMenu(Int_t id)
     TThread::Lock();
     fCrateHits[crate]->Draw();
     fCrateRate[crate]->Draw();
+    fCrateCmosRate[crate]->Draw();
+    fCrateTimeRate[crate]->Draw();
     fCrateNhit[crate]->Draw();
     TThread::UnLock();
-    fDisplayFrame->SetTab(3);
+    fDisplayFrame->SetTab(4);
   }
 }
 
@@ -352,11 +365,14 @@ void *RootApp::DrawThread(void* arg)
   for (Int_t i=0;i<20;i++){
     temp->fCCCHits[i]->Draw("LEGO");
     temp->fCCCRate[i]->Draw("LEGO");
+    temp->fCCCCmosRate[i]->Draw("LEGO");
   }
   temp->fNhit->Draw();
-  temp->fNhitRate->Draw();
+  temp->fNhitTimeRate->Draw();
   temp->fCrateHits[0]->Draw();
   temp->fCrateRate[0]->Draw();
+  temp->fCrateCmosRate[0]->Draw();
+  temp->fCrateTimeRate[0]->Draw();
   temp->fCrateNhit[0]->Draw();
   temp->fTrigCount->Draw();
   temp->fTrigRate->Draw();
@@ -364,35 +380,42 @@ void *RootApp::DrawThread(void* arg)
 
   Int_t i=0;
   while(temp->IsFinished() == kFALSE){
-      i++;
-      if (i==upd) i=0;
-      if ((i%upd) == 0) {
-        switch(temp->GetCurrentTab()){
-          case 0:
-            temp->fNhit->Modified();
-            temp->fNhitRate->Modified();
-            break;
-          case 1: 
-            for (Int_t j=0;j<20;j++)
-              temp->fCCCHits[j]->Modified();
-            break;
-          case 2:
-            for (Int_t j=0;j<20;j++){
-              temp->fCCCRate[j]->Modified();
-            }
-            break;
-          case 3:
-            temp->fCrateHits[temp->GetCurrentCrate()]->Modified();
-            temp->fCrateRate[temp->GetCurrentCrate()]->Modified();
-            temp->fCrateNhit[temp->GetCurrentCrate()]->Modified();
-            break;
-          case 4:
-            temp->fTrigCount->Modified();
-            temp->fTrigRate->Modified();
+    i++;
+    if (i==upd) i=0;
+    if ((i%upd) == 0) {
+      switch(temp->GetCurrentTab()){
+        case 0:
+          temp->fNhit->Modified();
+          temp->fNhitTimeRate->Modified();
           break;
-        }
-        usleep(1000000);
+        case 1: 
+          for (Int_t j=0;j<20;j++)
+            temp->fCCCHits[j]->Modified();
+          break;
+        case 2:
+          for (Int_t j=0;j<20;j++){
+            temp->fCCCRate[j]->Modified();
+          }
+          break;
+        case 3:
+          for (Int_t j=0;j<20;j++){
+            temp->fCCCCmosRate[j]->Modified();
+          }
+          break;
+        case 4:
+          temp->fCrateHits[temp->GetCurrentCrate()]->Modified();
+          temp->fCrateRate[temp->GetCurrentCrate()]->Modified();
+          temp->fCrateCmosRate[temp->GetCurrentCrate()]->Modified();
+          temp->fCrateTimeRate[temp->GetCurrentCrate()]->Modified();
+          temp->fCrateNhit[temp->GetCurrentCrate()]->Modified();
+          break;
+        case 5:
+          temp->fTrigCount->Modified();
+          temp->fTrigRate->Modified();
+          break;
       }
+      usleep(1000000);
+    }
   }
   printf("Draw thread exiting\n");
   return 0;
@@ -415,8 +438,8 @@ void *RootApp::DispatchThread(void* arg)
         for (Int_t i=0;i<26;i++){
           if ((0x1<<i) & trigtype){
             if (i<7){
-            temp->fTrigCount->Fill(i);
-            temp->fTrigRate->Fill(i,seconds);
+              temp->fTrigCount->Fill(i);
+              temp->fTrigRate->Fill(i,seconds);
             }
             if (i==10){
               temp->fTrigCount->Fill(7);
@@ -429,9 +452,9 @@ void *RootApp::DispatchThread(void* arg)
           }
         }
 
-        printf("Got an event with nhit %u at time %f with mask %08x\n",event->NHits,seconds,trigtype);
+        printf("Got an event with nhit %u at time %f with mask %08x\n",event->NHits,seconds,(unsigned int) trigtype);
         temp->fNhit->Fill(event->NHits);
-        temp->fNhitRate->Fill(event->NHits,seconds);
+        temp->fNhitTimeRate->Fill(event->NHits,seconds);
 
         Int_t NhitPerCrate[20];
         for (Int_t i=0;i<20;i++)
@@ -443,6 +466,7 @@ void *RootApp::DispatchThread(void* arg)
           int chan = (bundle.Word[0] >> 16) & (((ULong64_t)1 << 5) - 1);
           temp->fCCCHits[crate]->Fill(card,chan);
           temp->fCCCRate[crate]->Fill(card,chan,seconds);
+          temp->fCCCCmosRate[crate]->Fill(card,chan,seconds); //FIXME
           temp->fCrateHits[crate]->Fill(card*32+chan);
           NhitPerCrate[crate]++;
         }
@@ -450,6 +474,8 @@ void *RootApp::DispatchThread(void* arg)
         for (Int_t i=0;i<20;i++){
           temp->fCrateNhit[i]->Fill(NhitPerCrate[i]);
           temp->fCrateRate[i]->Fill(NhitPerCrate[i],seconds);
+          temp->fCrateCmosRate[i]->Fill(NhitPerCrate[i],seconds);
+          temp->fCrateTimeRate[i]->Fill(NhitPerCrate[i],seconds);
         }
       }
     }
