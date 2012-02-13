@@ -255,7 +255,12 @@ void RootApp::HandleMenu(Int_t id)
       for (Int_t i=0;i<20;i++){
         fCCCHits[i]->Clear();
         fCCCRate[i]->Clear();
+        fCrateHits[i]->Clear();
+        fCrateRate[i]->Clear();
+        fCrateNhit[i]->Clear();
       }
+      fTrigCount->Clear();
+      fTrigRate->Clear();
       break;
     case M_EDIT_PAUSE:
       fNhit->Pause();
@@ -263,7 +268,12 @@ void RootApp::HandleMenu(Int_t id)
       for (Int_t i=0;i<20;i++){
         fCCCHits[i]->Pause();
         fCCCRate[i]->Pause();
+        fCrateHits[i]->Pause();
+        fCrateRate[i]->Pause();
+        fCrateNhit[i]->Pause();
       }
+      fTrigCount->Pause();
+      fTrigRate->Pause();
       fMenuEdit->DisableEntry(M_EDIT_PAUSE);
       fMenuEdit->EnableEntry(M_EDIT_START);
       break;
@@ -273,7 +283,12 @@ void RootApp::HandleMenu(Int_t id)
       for (Int_t i=0;i<20;i++){
         fCCCHits[i]->UnPause();
         fCCCRate[i]->UnPause();
+        fCrateHits[i]->UnPause();
+        fCrateRate[i]->UnPause();
+        fCrateNhit[i]->UnPause();
       }
+      fTrigCount->UnPause();
+      fTrigRate->UnPause();
       fMenuEdit->DisableEntry(M_EDIT_START);
       fMenuEdit->EnableEntry(M_EDIT_PAUSE);
       break;

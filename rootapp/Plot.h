@@ -28,7 +28,6 @@ class Plot {
     void SetECanvas(TRootEmbeddedCanvas *ECanvas);
     TRootEmbeddedCanvas *GetECanvas();
     void Update();
-    void Clear();
     void Modified();
     void Pause();
     void UnPause();
@@ -48,6 +47,7 @@ class HistPlot : public Plot {
     void Draw();
     void Fill(Double_t x);
     void SetBinLabels(char ticks[][30]);
+    void Clear();
 };
 
 class TimeRatePlot : public Plot {
@@ -66,6 +66,7 @@ class TimeRatePlot : public Plot {
 
     void Draw();
     void Fill(Double_t counts, Double_t t);
+    void Clear();
 };
 
 class Hist2dPlot : public Plot {
@@ -80,6 +81,7 @@ class Hist2dPlot : public Plot {
 
     void Draw(const char* option);
     void Fill(Double_t x, Double_t y);
+    void Clear();
 };
 
 class RatePlot : public Plot {
@@ -93,6 +95,8 @@ class RatePlot : public Plot {
     Double_t            fCurrentTime;
 //    std::vector<Double_t> fCounts;
     Double_t            fCounts[512];
+    Double_t            fOldRates[512];
+    Double_t            fOldWeight;
 
   public:
     RatePlot(void* app, const char* name, const char* title, Int_t nbinsx, Double_t xlow, Double_t xup);
@@ -102,6 +106,8 @@ class RatePlot : public Plot {
     void Draw(const char* option = "");
     void Modified();
     void SetBinLabels(char ticks[][30]);
+    void Clear();
+    void Pause();
 };
 
 
@@ -117,6 +123,8 @@ class Rate2dPlot : public Plot {
     Double_t            fCurrentTime;
 //    std::vector<Double_t> fCounts;
     Double_t            fCounts[512];
+    Double_t            fOldRates[512];
+    Double_t            fOldWeight;
 
   public:
     Rate2dPlot(void* app, const char* name, const char* title, Int_t nbinsx, Double_t xlow, Double_t xup, Int_t nbinsy, Double_t ylow, Double_t yup);
@@ -125,6 +133,8 @@ class Rate2dPlot : public Plot {
     void Fill(Double_t x, Double_t y, Double_t t);
     void Draw(const char* option);
     void Modified();
+    void Clear();
+    void Pause();
 };
 
 #endif

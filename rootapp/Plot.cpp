@@ -41,8 +41,6 @@ void Plot::Update()
     fCanvas->Update();
 }
 
-void Plot::Clear(){}
-
 void Plot::Modified()
 {
   fCanvas->Modified();
@@ -87,6 +85,11 @@ void HistPlot::SetBinLabels(char ticks[][30])
   for (Int_t i=0;i<fXbins;i++){
     fHist->GetXaxis()->SetBinLabel(i+1,ticks[i]);
   }
+}
+
+void HistPlot::Clear()
+{
+  fHist->Scale(0);
 }
 
 TimeRatePlot::TimeRatePlot(void* app, const char* name, const char* title, Int_t nbinsx, Double_t xlow, Double_t xup)
@@ -134,6 +137,13 @@ void TimeRatePlot::Fill(Double_t counts, Double_t t)
   }
 }
 
+void TimeRatePlot::Clear()
+{
+  fFirstBinTime = 0;
+  fFirstBinCount = 0;
+  fHist->Scale(0);
+}
+
 Hist2dPlot::Hist2dPlot(void* app, const char* name, const char* title, Int_t nbinsx, Double_t xlow, Double_t xup, Int_t nbinsy, Double_t ylow, Double_t yup)
   : Plot(app)
 {
@@ -158,6 +168,11 @@ void Hist2dPlot::Fill(Double_t x,Double_t y)
     fHist->Fill(x,y);
 }
 
+void Hist2dPlot::Clear()
+{
+  fHist->Scale(0);
+}
+
 RatePlot::RatePlot(void* app, const char* name, const char* title, Int_t nbinsx, Double_t xlow, Double_t xup)
   : Plot(app)
 {
@@ -165,8 +180,11 @@ RatePlot::RatePlot(void* app, const char* name, const char* title, Int_t nbinsx,
   fStartTime = 0;
   fCurrentTime = 0;
   fXbins = nbinsx;
-  for (Int_t i=0;i<512;i++)
+  fOldWeight = 0;
+  for (Int_t i=0;i<512;i++){
     fCounts[i] = 0;
+    fOldRates[i] = 0;
+  }
 }
 
 RatePlot::~RatePlot()
@@ -180,12 +198,26 @@ void RatePlot::Draw(const char* option)
   fHist->Draw(option);
 }
 
+void RatePlot::Pause()
+{
+  Plot::Pause();
+  double elapsed = fCurrentTime-fStartTime;
+  for (Int_t i=0;i<fXbins;i++){
+    fOldRates[i] = (fOldRates[i]*fOldWeight + fCounts[i])/(fOldWeight + elapsed);
+  }
+  fOldWeight = fOldWeight + elapsed;
+  fCurrentTime = 0;
+  fStartTime = 0;
+  for (Int_t i=0;i<512;i++)
+    fCounts[i] = 0;
+}
+
 void RatePlot::Modified()
 {
   if (fCurrentTime > 0){
     double elapsed = fCurrentTime-fStartTime;
     for (Int_t i=0;i<fXbins;i++){
-      fHist->SetBinContent(i+1,(fCounts[i]/elapsed));
+      fHist->SetBinContent(i+1,((fCounts[i] + fOldRates[i]*fOldWeight)/(elapsed+fOldWeight)));
     }
   }
   fCanvas->Modified();
@@ -207,6 +239,18 @@ void RatePlot::SetBinLabels(char ticks[][30])
   for (Int_t i=0;i<fXbins;i++){
     fHist->GetXaxis()->SetBinLabel(i+1,ticks[i]);
   }
+}
+
+void RatePlot::Clear()
+{
+  fStartTime = 0;
+  fCurrentTime = 0;
+  for (Int_t i=0;i<512;i++){
+    fCounts[i] = 0;
+    fOldRates[i] = 0;
+  }
+  fOldWeight = 0;
+  fHist->Scale(0);
 }
 
 
@@ -239,7 +283,7 @@ void Rate2dPlot::Modified()
     double elapsed = fCurrentTime-fStartTime;
     for (Int_t i=0;i<fXbins;i++){
       for (Int_t j=0;j<fYbins;j++){
-        fHist->SetBinContent(i+1,j+1,(fCounts[i*fYbins+j]/elapsed));
+        fHist->SetBinContent(i+1,j+1,((fCounts[i*fYbins+j] + fOldRates[i*fYbins+j]*fOldWeight)/(elapsed+fOldWeight)));
       }
     }
   }
@@ -256,3 +300,33 @@ void Rate2dPlot::Fill(Double_t x, Double_t y, Double_t t)
       fCurrentTime = t;
   }
 }
+
+void Rate2dPlot::Clear()
+{
+  fStartTime = 0;
+  fCurrentTime = 0;
+  for (Int_t i=0;i<512;i++){
+    fCounts[i] = 0;
+    fOldRates[i] = 0;
+  }
+  fOldWeight = 0;
+  fHist->Scale(0);
+}
+
+void Rate2dPlot::Pause()
+{
+  Plot::Pause();
+  double elapsed = fCurrentTime-fStartTime;
+  for (Int_t i=0;i<fXbins;i++){
+    for (Int_t j=0;j<fYbins;j++){
+      fOldRates[i*fYbins+j] = (fOldRates[i*fYbins+j]*fOldWeight + fCounts[i*fYbins+j])/(fOldWeight + elapsed);
+    }
+  }
+  fOldWeight = fOldWeight + elapsed;
+  fCurrentTime = 0;
+  fStartTime = 0;
+  for (Int_t i=0;i<512;i++)
+    fCounts[i] = 0;
+}
+
+
