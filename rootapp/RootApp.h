@@ -22,6 +22,7 @@ class RootApp : public TGMainFrame {
     TGPopupMenu         *fMenuFile;
     TGPopupMenu         *fMenuEdit;
     TGPopupMenu         *fMenuCrate;
+    TGPopupMenu         *fMenuCard;
     TGPopupMenu         *fMenuHelp;
     TGToolTip           *fToolTip;
 
@@ -33,12 +34,14 @@ class RootApp : public TGMainFrame {
     TGCompositeFrame    *fTab4;
     TGCompositeFrame    *fTab5;
     TGCompositeFrame    *fTab6;
+    TGCompositeFrame    *fTab7;
 
     TThread             *fDrawThread;
     TThread             *fDispatchThread;
 
     Int_t               fCurrentTab;
     Int_t               fCurrentCrate;
+    Int_t               fCurrentCard;
 
   public: 
     RootApp(const TGWindow *p,UInt_t w,UInt_t h); 
@@ -48,6 +51,7 @@ class RootApp : public TGMainFrame {
     void SetupTabs();
 
     Int_t GetCurrentCrate(){return fCurrentCrate;};
+    Int_t GetCurrentCard(){return fCurrentCard;};
     Int_t GetCurrentTab(){return fCurrentTab;};
     Bool_t IsFinished(){return fFinished;};
     virtual void CloseWindow();
@@ -60,22 +64,28 @@ class RootApp : public TGMainFrame {
     static void *DispatchThread(void* arg);
     static void *DrawThread(void* arg);
 
-    //tab1
+    // tab1
     HistPlot            *fNhit;
     TimeRatePlot        *fNhitTimeRate;
-    //tab2
+    // tab2
     Hist2dPlot          *fCCCHits[20];
-    //tab3
+    // tab3
     Rate2dPlot          *fCCCRate[20];        
-    //tab4
+    // tab4
     Rate2dPlot          *fCCCCmosRate[20];        
-    //tab5
+    // tab5
     HistPlot            *fCrateHits[20];
     RatePlot            *fCrateRate[20];
     RatePlot            *fCrateCmosRate[20];
     TimeRatePlot        *fCrateTimeRate[20];
     HistPlot            *fCrateNhit[20];
-    //tab6
+    // tab6
+    HistPlot            *fCardHits[320];
+    RatePlot            *fCardRate[320];
+    RatePlot            *fCardCmosRate[320];
+    TimeRatePlot        *fCardTimeRate[320];
+    HistPlot            *fCardNhit[320];
+    // tab 7
     HistPlot            *fTrigCount;
     RatePlot            *fTrigRate;
 

@@ -49,6 +49,7 @@ class HistPlot : public Plot {
     void Fill(Double_t x);
     void SetBinLabels(char ticks[][30]);
     void Clear();
+    void SetXaxisLabel(const char *label){fHist->GetXaxis()->SetTitle(label);};
 };
 
 class TimeRatePlot : public Plot {
@@ -68,6 +69,7 @@ class TimeRatePlot : public Plot {
     void Draw();
     void Fill(Double_t counts, Double_t t);
     void Clear();
+    void SetXaxisLabel(const char *label){fHist->GetXaxis()->SetTitle(label);};
 };
 
 class Hist2dPlot : public Plot {
@@ -83,6 +85,8 @@ class Hist2dPlot : public Plot {
     void Draw(const char* option);
     void Fill(Double_t x, Double_t y);
     void Clear();
+    void SetXaxisLabel(const char *label){fHist->GetXaxis()->SetTitle(label);};
+    void SetYaxisLabel(const char *label){fHist->GetYaxis()->SetTitle(label);};
 };
 
 class RatePlot : public Plot {
@@ -109,6 +113,7 @@ class RatePlot : public Plot {
     void SetBinLabels(char ticks[][30]);
     void Clear();
     void Pause();
+    void SetXaxisLabel(const char *label){fHist->GetXaxis()->SetTitle(label);};
 };
 
 
@@ -136,6 +141,8 @@ class Rate2dPlot : public Plot {
     void Modified();
     void Clear();
     void Pause();
+    void SetXaxisLabel(const char *label){fHist->GetXaxis()->SetTitle(label);};
+    void SetYaxisLabel(const char *label){fHist->GetYaxis()->SetTitle(label);};
 };
 
 #endif

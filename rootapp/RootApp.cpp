@@ -30,6 +30,8 @@
 #define M_EDIT_START      5
 #define M_CRATE_OFFSET    1000
 #define M_CRATE_NUM(a)    M_CRATE_OFFSET+a
+#define M_CARD_OFFSET    2000
+#define M_CARD_NUM(a)    M_CARD_OFFSET+a
 
 RootApp::RootApp(const TGWindow *p,UInt_t w,UInt_t h) : TGMainFrame(p,w,h) { 
   fFinished = kFALSE;
@@ -37,44 +39,87 @@ RootApp::RootApp(const TGWindow *p,UInt_t w,UInt_t h) : TGMainFrame(p,w,h) {
   fDrawThread = 0;
 
   for (Int_t i=0;i<20;i++){
-    char tempname[10];
+    char tempname[100];
     sprintf(tempname,"Crate %02d CC hits",i);
     fCCCHits[i] = new Hist2dPlot(this,tempname,"Hits per channel",16,0,16,32,0,32);
+    fCCCHits[i]->SetXaxisLabel("Card");
+    fCCCHits[i]->SetYaxisLabel("Channel");
     fPlots.push_back(fCCCHits[i]);
 
     sprintf(tempname,"Crate %02d CC rate",i);
     fCCCRate[i] = new Rate2dPlot(this,tempname,"Hit Rate (hits/s) per channel",16,0,16,32,0,32);
+    fCCCRate[i]->SetXaxisLabel("Card");
+    fCCCRate[i]->SetYaxisLabel("Channel");
     fPlots.push_back(fCCCRate[i]);
 
     sprintf(tempname,"Crate %02d CMOS rate",i);
     fCCCCmosRate[i] = new Rate2dPlot(this,tempname,"CMOS Rate (1/s) per channel",16,0,16,32,0,32);
+    fCCCCmosRate[i]->SetXaxisLabel("Card");
+    fCCCCmosRate[i]->SetYaxisLabel("Channel");
     fPlots.push_back(fCCCCmosRate[i]);
 
     sprintf(tempname,"Crate %02d hits",i);
     fCrateHits[i] = new HistPlot(this,tempname,"Hits per channel",512,0,512);
+    fCrateHits[i]->SetXaxisLabel("Channel");
     fPlots.push_back(fCrateHits[i]);
 
     sprintf(tempname,"Crate %02d rate",i);
     fCrateRate[i]  = new RatePlot(this,tempname,"Hit Rate (hits/s) per channel",512,0,512);
+    fCrateRate[i]->SetXaxisLabel("Channel");
     fPlots.push_back(fCrateRate[i]);
 
     sprintf(tempname,"Crate %02d CMOS rate",i);
     fCrateCmosRate[i]  = new RatePlot(this,tempname,"CMOS Rate (1/s) per channel",512,0,512);
+    fCrateCmosRate[i]->SetXaxisLabel("Channel");
     fPlots.push_back(fCrateCmosRate[i]);
 
-    sprintf(tempname,"Crate %02d rate",i);
+    sprintf(tempname,"Crate %02d scrolling rate",i);
     fCrateTimeRate[i] = new TimeRatePlot(this,tempname,"Scrolling average hit rate (hits/s)",20,-20,0);
+    fCrateTimeRate[i]->SetXaxisLabel("Time (seconds)");
     fPlots.push_back(fCrateTimeRate[i]);
     
     sprintf(tempname,"Crate %02d NHit",i);
     fCrateNhit[i] = new HistPlot(this,tempname,"Nhit",20,0,40);
+    fCrateNhit[i]->SetXaxisLabel("Nhit");
     fPlots.push_back(fCrateNhit[i]);
   }
 
+  for (Int_t i=0;i<20;i++){
+    for (Int_t j=0;j<16;j++){
+    char tempname[100];
+    sprintf(tempname,"Crate %d card %d hits",i,j);
+    fCardHits[i*16+j] = new HistPlot(this,tempname,"Hits per channel",32,0,32);
+    fCardHits[i*16+j]->SetXaxisLabel("Channel");
+    fPlots.push_back(fCardHits[i*16+j]);
+  
+    sprintf(tempname,"Crate %d card %d rate",i,j);
+    fCardRate[i*16+j] = new RatePlot(this,tempname,"Hit Rate (hits/s) per channel",32,0,32);
+    fCardRate[i*16+j]->SetXaxisLabel("Channel");
+    fPlots.push_back(fCardRate[i*16+j]);
+    
+    sprintf(tempname,"Crate %d card %d CMOS rate",i,j);
+    fCardCmosRate[i*16+j] = new RatePlot(this,tempname,"CMOS rate (1/s) per channel",32,0,32);
+    fCardCmosRate[i*16+j]->SetXaxisLabel("Channel");
+    fPlots.push_back(fCardCmosRate[i*16+j]);
+    
+    sprintf(tempname,"Crate %d card %d scrolling rate",i,j);
+    fCardTimeRate[i*16+j] = new TimeRatePlot(this,tempname,"Scrolling average hit rate (hits/s)",20,-20,0);
+    fCardTimeRate[i*16+j]->SetXaxisLabel("Time (seconds)");
+    fPlots.push_back(fCardTimeRate[i*16+j]);
+    
+    sprintf(tempname,"Crate %d card %d NHit",i,j);
+    fCardNhit[i*16+j] = new HistPlot(this,tempname,"Nhit",20,0,40);
+    fCardNhit[i*16+j]->SetXaxisLabel("Nhit");
+    fPlots.push_back(fCardNhit[i*16+j]);
+    }
+  }
+
   fNhit = new HistPlot(this,"Nhit","Nhit",20,0,400);
+  fNhit->SetXaxisLabel("Nhit");
   fPlots.push_back(fNhit);
   
   fNhitTimeRate = new TimeRatePlot(this,"Nhit rate","Scrolling average total hit rate (hits/s)",20,-20,0);
+  fNhitTimeRate->SetXaxisLabel("Time (seconds)");
   fPlots.push_back(fNhitTimeRate);
   
   char triggernames[9][30] = {"N100L","N100M","N100H","N20","N20L","ESUML","ESUMH","PulseGT","PreScale"};
@@ -138,6 +183,7 @@ RootApp::~RootApp() {
   delete fTab4;
   delete fTab5;
   delete fTab6;
+  delete fTab7;
   for (Int_t i=0;i<fPlots.size();i++){
     delete fPlots[i];
   }
@@ -178,6 +224,19 @@ void RootApp::SetupMenus()
   fCurrentCrate = 0;
   fMenuCrate->Connect("Activated(Int_t)","RootApp",this,"HandleMenu(Int_t)");
   fMenuBar->AddPopup("&Crate",fMenuCrate,new TGLayoutHints(kLHintsTop | kLHintsLeft, 0, 4, 0, 0) );
+
+  fMenuCard = new TGPopupMenu(gClient->GetRoot());
+  for (Int_t i=0;i<16;i++){
+    char tempname[40];
+    sprintf(tempname,"Card &%d\n",i);
+    fMenuCard->AddEntry(tempname,M_CARD_NUM(i));
+  }
+  fMenuCard->CheckEntry(M_CARD_NUM(0));
+  fCurrentCard = 0;
+  fMenuCard->Connect("Activated(Int_t)","RootApp",this,"HandleMenu(Int_t)");
+  fMenuBar->AddPopup("Car&d",fMenuCard,new TGLayoutHints(kLHintsTop | kLHintsLeft, 0, 4, 0, 0) );
+
+
 
   fMenuHelp = new TGPopupMenu(gClient->GetRoot());
   fMenuHelp->AddEntry("&About",1);
@@ -251,12 +310,32 @@ void RootApp::SetupTabs()
     fCrateCmosRate[i]->SetECanvas(fCrateCmosRate[0]->GetECanvas());
   }
 
-  fTab6 = fDisplayFrame->AddTab("Triggers");
-  fTab6->SetLayoutManager(new TGTableLayout(fTab6,2,1));
-  fTrigCount->CreateECanvas("trigcounts",fTab6,100,100);
-  fTab6->AddFrame(fTrigCount->GetECanvas(),new TGTableLayoutHints(0,1,0,1,kLHintsFillX | kLHintsFillY | kLHintsShrinkX | kLHintsShrinkY | kLHintsExpandX | kLHintsExpandY));
-  fTrigRate->CreateECanvas("trigcounts",fTab6,100,100);
-  fTab6->AddFrame(fTrigRate->GetECanvas(),new TGTableLayoutHints(0,1,1,2,kLHintsFillX | kLHintsFillY | kLHintsShrinkX | kLHintsShrinkY | kLHintsExpandX | kLHintsExpandY));
+  fTab6 = fDisplayFrame->AddTab("Card");
+  fTab6->SetLayoutManager(new TGTableLayout(fTab6,3,2));
+  fCardHits[0]->CreateECanvas("hits",fTab6,100,100);
+  fTab6->AddFrame(fCardHits[0]->GetECanvas(),new TGTableLayoutHints(0,1,0,1,kLHintsFillX | kLHintsFillY | kLHintsShrinkX | kLHintsShrinkY | kLHintsExpandX | kLHintsExpandY));
+  fCardTimeRate[0]->CreateECanvas("time rate",fTab6,100,100);
+  fTab6->AddFrame(fCardTimeRate[0]->GetECanvas(),new TGTableLayoutHints(1,2,0,1,kLHintsFillX | kLHintsFillY | kLHintsShrinkX | kLHintsShrinkY | kLHintsExpandX | kLHintsExpandY));
+  fCardRate[0]->CreateECanvas("rate",fTab6,100,100);
+  fTab6->AddFrame(fCardRate[0]->GetECanvas(),new TGTableLayoutHints(0,1,1,2,kLHintsFillX | kLHintsFillY | kLHintsShrinkX | kLHintsShrinkY | kLHintsExpandX | kLHintsExpandY));
+  fCardCmosRate[0]->CreateECanvas("cmos rate",fTab6,100,100);
+  fTab6->AddFrame(fCardCmosRate[0]->GetECanvas(),new TGTableLayoutHints(1,2,1,2,kLHintsFillX | kLHintsFillY | kLHintsShrinkX | kLHintsShrinkY | kLHintsExpandX | kLHintsExpandY));
+  fCardNhit[0]->CreateECanvas("nhit",fTab6,100,100);
+  fTab6->AddFrame(fCardNhit[0]->GetECanvas(),new TGTableLayoutHints(0,2,2,3,kLHintsFillX | kLHintsFillY | kLHintsShrinkX | kLHintsShrinkY | kLHintsExpandX | kLHintsExpandY));
+  for (Int_t i=1;i<320;i++){
+    fCardHits[i]->SetECanvas(fCardHits[0]->GetECanvas());
+    fCardTimeRate[i]->SetECanvas(fCardTimeRate[0]->GetECanvas());
+    fCardNhit[i]->SetECanvas(fCardNhit[0]->GetECanvas());
+    fCardRate[i]->SetECanvas(fCardRate[0]->GetECanvas());
+    fCardCmosRate[i]->SetECanvas(fCardCmosRate[0]->GetECanvas());
+  }
+
+  fTab7 = fDisplayFrame->AddTab("Triggers");
+  fTab7->SetLayoutManager(new TGTableLayout(fTab7,2,1));
+  fTrigCount->CreateECanvas("trigcounts",fTab7,100,100);
+  fTab7->AddFrame(fTrigCount->GetECanvas(),new TGTableLayoutHints(0,1,0,1,kLHintsFillX | kLHintsFillY | kLHintsShrinkX | kLHintsShrinkY | kLHintsExpandX | kLHintsExpandY));
+  fTrigRate->CreateECanvas("trigcounts",fTab7,100,100);
+  fTab7->AddFrame(fTrigRate->GetECanvas(),new TGTableLayoutHints(0,1,1,2,kLHintsFillX | kLHintsFillY | kLHintsShrinkX | kLHintsShrinkY | kLHintsExpandX | kLHintsExpandY));
 
   fMainFrame->AddFrame(fDisplayFrame, new TGLayoutHints(kLHintsExpandX| kLHintsExpandY, 
         10,10,10,1));  
@@ -304,18 +383,43 @@ void RootApp::HandleMenu(Int_t id)
       fMenuEdit->EnableEntry(M_EDIT_PAUSE);
       break;
   }
+  if (id >= M_CARD_OFFSET){
+    for (Int_t i=0;i<20;i++)
+      fMenuCard->UnCheckEntry(M_CARD_NUM(i));
+    fMenuCard->CheckEntry(id);
+    Int_t card = (id-M_CARD_OFFSET) + fCurrentCrate*16;
+    fCurrentCard = card;
+    TThread::Lock();
+    fCardHits[card]->Draw();
+    fCardRate[card]->Draw();
+    fCardTimeRate[card]->Draw();
+    fCardCmosRate[card]->Draw();
+    fCardNhit[card]->Draw();
+    TThread::UnLock();
+    fDisplayFrame->SetTab(5);
+  }else
   if (id >= M_CRATE_OFFSET){
     for (Int_t i=0;i<20;i++)
       fMenuCrate->UnCheckEntry(M_CRATE_NUM(i));
     fMenuCrate->CheckEntry(id);
     Int_t crate = id-M_CRATE_OFFSET;
+    fCurrentCard = fCurrentCard-fCurrentCrate*16+crate*16;
+    fCurrentCrate = crate;
+
     TThread::Lock();
     fCrateHits[crate]->Draw();
     fCrateRate[crate]->Draw();
     fCrateCmosRate[crate]->Draw();
     fCrateTimeRate[crate]->Draw();
     fCrateNhit[crate]->Draw();
+    
+    fCardHits[fCurrentCard]->Draw();
+    fCardRate[fCurrentCard]->Draw();
+    fCardTimeRate[fCurrentCard]->Draw();
+    fCardCmosRate[fCurrentCard]->Draw();
+    fCardNhit[fCurrentCard]->Draw();
     TThread::UnLock();
+
     fDisplayFrame->SetTab(4);
   }
 }
@@ -374,6 +478,11 @@ void *RootApp::DrawThread(void* arg)
   temp->fCrateCmosRate[0]->Draw();
   temp->fCrateTimeRate[0]->Draw();
   temp->fCrateNhit[0]->Draw();
+  temp->fCardHits[0]->Draw();
+  temp->fCardRate[0]->Draw();
+  temp->fCardCmosRate[0]->Draw();
+  temp->fCardTimeRate[0]->Draw();
+  temp->fCardNhit[0]->Draw();
   temp->fTrigCount->Draw();
   temp->fTrigRate->Draw();
   TThread::UnLock();
@@ -410,6 +519,12 @@ void *RootApp::DrawThread(void* arg)
           temp->fCrateNhit[temp->GetCurrentCrate()]->Modified();
           break;
         case 5:
+          temp->fCardHits[temp->GetCurrentCard()]->Modified();
+          temp->fCardRate[temp->GetCurrentCard()]->Modified();
+          temp->fCardCmosRate[temp->GetCurrentCard()]->Modified();
+          temp->fCardTimeRate[temp->GetCurrentCard()]->Modified();
+          temp->fCardNhit[temp->GetCurrentCard()]->Modified();
+        case 6:
           temp->fTrigCount->Modified();
           temp->fTrigRate->Modified();
           break;
@@ -457,8 +572,11 @@ void *RootApp::DispatchThread(void* arg)
         temp->fNhitTimeRate->Fill(event->NHits,seconds);
 
         Int_t NhitPerCrate[20];
+        Int_t NhitPerCard[320];
         for (Int_t i=0;i<20;i++)
           NhitPerCrate[i] = 0;
+        for (Int_t i=0;i<320;i++)
+          NhitPerCard[i] = 0;
         for (Int_t i=0;i<event->PMTBundles.size();i++){
           RAT::DS::PMTBundle bundle = event->PMTBundles[i];
           int crate = (bundle.Word[0] >> 21) & (((ULong64_t)1 << 5) - 1);
@@ -467,15 +585,26 @@ void *RootApp::DispatchThread(void* arg)
           temp->fCCCHits[crate]->Fill(card,chan);
           temp->fCCCRate[crate]->Fill(card,chan,seconds);
           temp->fCCCCmosRate[crate]->Fill(card,chan,seconds); //FIXME
+
           temp->fCrateHits[crate]->Fill(card*32+chan);
+          temp->fCrateRate[crate]->Fill(card*32+chan,seconds);
+          temp->fCrateCmosRate[crate]->Fill(card*32+chan,seconds); //FIXME
+
+          temp->fCardHits[crate*16+card]->Fill(chan);
+          temp->fCardRate[crate*16+card]->Fill(chan,seconds);
+          temp->fCardCmosRate[crate*16+card]->Fill(chan,seconds); //FIXME
+
           NhitPerCrate[crate]++;
+          NhitPerCard[crate*16+card]++;
         }
 
         for (Int_t i=0;i<20;i++){
           temp->fCrateNhit[i]->Fill(NhitPerCrate[i]);
-          temp->fCrateRate[i]->Fill(NhitPerCrate[i],seconds);
-          temp->fCrateCmosRate[i]->Fill(NhitPerCrate[i],seconds);
           temp->fCrateTimeRate[i]->Fill(NhitPerCrate[i],seconds);
+        }
+        for (Int_t i=0;i<320;i++){
+          temp->fCardNhit[i]->Fill(NhitPerCard[i]);
+          temp->fCardTimeRate[i]->Fill(NhitPerCard[i],seconds);
         }
       }
     }
