@@ -16,7 +16,6 @@
 #include "time.h"
 #include "stdlib.h"
 #include "stdio.h"
-#include "jsoncpp/json.h"
 #include "RAT/DS/PackedEvent.hh"
 #include "avalanche.hpp"
 
@@ -539,9 +538,10 @@ void *RootApp::DrawThread(void* arg)
 void *RootApp::DispatchThread(void* arg)
 {
   RootApp* temp = (RootApp*) arg;
-  avalanche::client client("tcp://localhost:5024");
+  avalanche::client client;
+  client.addDispatcher("tcp://localhost:5024");
   while(temp->IsFinished() == kFALSE){
-    RAT::DS::PackedRec* rec = (RAT::DS::PackedRec*) client.recvObject(RAT::DS::PackedRec::Class(),ZMQ_NOBLOCK);
+    RAT::DS::PackedRec* rec = (RAT::DS::PackedRec*) client.recv();
     if (rec){
       if (rec->RecordType == 1){
         RAT::DS::PackedEvent* event = (RAT::DS::PackedEvent*) rec->Rec;

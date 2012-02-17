@@ -3,7 +3,7 @@ CFLAGS  = -g
 LFLAGS  = -L/usr/local/lib -L$(ROOTSYS)/lib -L$(AVALANCHE) -L$(RATROOT)/lib
 INCLUDE = -I$(ROOTSYS)/include -I$(AVALANCHE) -I$(RATROOT)/include
 
-LIBS	  = -lzmq -lavalanche -ljson_linux-gcc-4.4.3_libmt -lRATEvent_Linux-g++ 
+LIBS	  = -lzmq -lavalanche -lRATEvent_$(G4OSNAME)-g++ 
 
 SRCS		= RootApp.cpp Plot.cpp
 HDRS		= $(SRCS:.cpp=.h)
